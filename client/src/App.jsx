@@ -1,0 +1,93 @@
+import React, { useState, useEffect } from 'react';
+import io from 'socket.io-client';
+import { MessageCircle } from 'lucide-react';
+import Landing from './components/Landing';
+import ChatSession from './components/ChatSession';
+
+export default function App() {
+  const [view, setView] = useState('landing'); // 'landing' | 'chat'
+  const [mode, setMode] = useState('text'); // 'text' | 'video'
+  const [interests, setInterests] = useState([]);
+  const [socket, setSocket] = useState(null);
+  const [onlineCount, setOnlineCount] = useState(0);
+  const [connected, setConnected] = useState(false);
+
+  // Initialize socket connection on load
+  useEffect(() => {
+    // Vite proxies /socket.io automatically, so connecting to empty arg (current host) works
+    const socketConnection = io({
+      autoConnect: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000
+    });
+
+    socketConnection.on('connect', () => {
+      console.log('Connected to signaling server');
+      setConnected(true);
+    });
+
+    socketConnection.on('disconnect', () => {
+      console.log('Disconnected from signaling server');
+      setConnected(false);
+    });
+
+    socketConnection.on('stats', ({ onlineCount }) => {
+      setOnlineCount(onlineCount);
+    });
+
+    setSocket(socketConnection);
+
+    return () => {
+      socketConnection.disconnect();
+    };
+  }, []);
+
+  const handleStartChat = (selectedMode) => {
+    setMode(selectedMode);
+    setView('chat');
+  };
+
+  const handleLeaveChat = () => {
+    if (socket) {
+      socket.emit('disconnect-chat');
+    }
+    setView('landing');
+  };
+
+  return (
+    <div className="app-container">
+      {/* Premium Header */}
+      <header className="app-header">
+        <div className="logo" onClick={handleLeaveChat} style={{ cursor: 'pointer' }}>
+          <MessageCircle size={28} style={{ color: 'var(--primary)' }} />
+          Guff<span>adi</span>
+        </div>
+        <div className="online-badge">
+          <div className="pulse-dot" style={{ backgroundColor: connected ? 'var(--success)' : 'var(--error)' }}></div>
+          <span>
+            {connected 
+              ? `${onlineCount} Stranger${onlineCount === 1 ? '' : 's'} Online` 
+              : 'Reconnecting to Server...'}
+          </span>
+        </div>
+      </header>
+
+      {/* Main View Manager */}
+      {view === 'landing' ? (
+        <Landing
+          onlineCount={onlineCount}
+          interests={interests}
+          setInterests={setInterests}
+          onStartChat={handleStartChat}
+        />
+      ) : (
+        <ChatSession
+          socket={socket}
+          mode={mode}
+          interests={interests}
+          onLeave={handleLeaveChat}
+        />
+      )}
+    </div>
+  );
+}
