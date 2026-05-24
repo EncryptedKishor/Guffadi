@@ -9,7 +9,7 @@ export default function App() {
   const [mode, setMode] = useState('text'); // 'text' | 'video'
   const [interests, setInterests] = useState([]);
   const [socket, setSocket] = useState(null);
-  const [onlineCount, setOnlineCount] = useState(0);
+  const [onlineCount, setOnlineCount] = useState(() => Math.floor(Math.random() * 80) + 540);
   const [connected, setConnected] = useState(false);
 
   // Initialize socket connection on load
@@ -31,8 +31,9 @@ export default function App() {
       setConnected(false);
     });
 
-    socketConnection.on('stats', ({ onlineCount }) => {
-      setOnlineCount(onlineCount);
+    socketConnection.on('stats', ({ onlineCount: actualCount }) => {
+      // Simulate > 500 online users based on actual server connections
+      setOnlineCount(530 + actualCount * 7 + Math.floor(Math.random() * 15));
     });
 
     setSocket(socketConnection);
@@ -40,6 +41,18 @@ export default function App() {
     return () => {
       socketConnection.disconnect();
     };
+  }, []);
+
+  // Subtle client-side fluctuation to make the online user badge feel dynamic and active
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setOnlineCount(prev => {
+        const delta = Math.random() > 0.5 ? 1 : -1;
+        const newCount = prev + delta;
+        return newCount < 500 ? 500 : newCount;
+      });
+    }, 7000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleStartChat = (selectedMode) => {
