@@ -38,6 +38,64 @@ const videoQueue = [];
 // Track active matches: socketId -> { partnerId, roomId, mode }
 const activeMatches = new Map();
 
+// Track bot timers & active response timeouts
+const botTimers = new Map();
+const botTimeouts = new Map();
+
+function handleBotConversation(socket, userMessage, match) {
+  const cleanedMsg = userMessage.trim().toLowerCase();
+  let responseText = "";
+  
+  if (cleanedMsg.includes('hi') || cleanedMsg.includes('hello') || cleanedMsg.includes('hey')) {
+    responseText = "Hey! What's up? How's your day going?";
+  } else if (cleanedMsg.includes('where') || cleanedMsg.includes('from') || cleanedMsg.includes('location')) {
+    responseText = "I'm from Kathmandu, currently staying in Pokhara. What about you?";
+  } else if (cleanedMsg.includes('old') || cleanedMsg.includes('age') || cleanedMsg.includes('years')) {
+    responseText = "I'm 21! What about you?";
+  } else if (cleanedMsg.includes('boy') || cleanedMsg.includes('girl') || cleanedMsg.includes('m or f') || cleanedMsg.includes('gender')) {
+    responseText = "F! What about you?";
+  } else if (cleanedMsg.includes('no') || cleanedMsg.includes('yes') || cleanedMsg.includes('yeah')) {
+    responseText = "Ah, cool. So what are your hobbies?";
+  } else if (cleanedMsg.includes('bye') || cleanedMsg.includes('disconnect') || cleanedMsg.includes('stop')) {
+    responseText = "Alright, bye!";
+  } else {
+    const botConversations = [
+      "Hey! How's it going?",
+      "What are you up to?",
+      "Cool! I'm just listening to some music. What kind of music do you like?",
+      "That's awesome. I'm actually from Pokhara! Where are you chatting from?",
+      "Oh nice! What do you do for a living / study?",
+      "Haha same here! By the way, what are your hobbies?",
+      "That sounds like fun. I love hiking and reading books.",
+      "Well, it was nice talking to you! I have to go now. Bye!",
+      "I have to go do some chores now, talk to you later!"
+    ];
+    
+    responseText = botConversations[match.botStep % botConversations.length];
+    match.botStep += 1;
+  }
+  
+  // Set typing indicator
+  socket.emit('typing', { isTyping: true });
+  
+  const existingTimeout = botTimeouts.get(socket.id);
+  if (existingTimeout) clearTimeout(existingTimeout);
+  
+  const delay = Math.max(1000, Math.min(3000, responseText.length * 50));
+  
+  const timeoutId = setTimeout(() => {
+    socket.emit('typing', { isTyping: false });
+    socket.emit('message', {
+      text: responseText,
+      sender: 'stranger',
+      timestamp: Date.now()
+    });
+    botTimeouts.delete(socket.id);
+  }, delay);
+  
+  botTimeouts.set(socket.id, timeoutId);
+}
+
 // Helper: Normalize interest strings
 function normalizeInterests(interestsArray) {
   if (!Array.isArray(interestsArray)) return [];
@@ -121,28 +179,44 @@ function removeFromQueues(socketId) {
 
   const videoIdx = videoQueue.findIndex(item => item.id === socketId);
   if (videoIdx !== -1) videoQueue.splice(videoIdx, 1);
+
+  // Clear bot queue timer if any
+  const timerId = botTimers.get(socketId);
+  if (timerId) {
+    clearTimeout(timerId);
+    botTimers.delete(socketId);
+  }
 }
 
 // Helper to handle chat disconnect
 function handleDisconnectChat(socket) {
   const match = activeMatches.get(socket.id);
   if (match) {
-    const { partnerId, roomId } = match;
+    const { partnerId, roomId, isBot } = match;
 
     // Clean up matches
     activeMatches.delete(socket.id);
-    activeMatches.delete(partnerId);
 
-    // Notify partner
-    io.to(partnerId).emit('partner-disconnected');
-
-    // Make both leave room
-    const partnerSocket = io.sockets.sockets.get(partnerId);
-    if (partnerSocket) {
-      partnerSocket.leave(roomId);
+    // Clear any active bot reply timeouts
+    const timeoutId = botTimeouts.get(socket.id);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      botTimeouts.delete(socket.id);
     }
-    socket.leave(roomId);
 
+    if (!isBot) {
+      activeMatches.delete(partnerId);
+      // Notify partner
+      io.to(partnerId).emit('partner-disconnected');
+
+      // Make partner leave room
+      const partnerSocket = io.sockets.sockets.get(partnerId);
+      if (partnerSocket) {
+        partnerSocket.leave(roomId);
+      }
+    }
+    
+    socket.leave(roomId);
     console.log(`Match ended: Room ${roomId} dissolved.`);
   }
 }
@@ -208,6 +282,37 @@ io.on('connection', (socket) => {
       });
       socket.emit('waiting');
       console.log(`${mode} queue length: ${queue.length}`);
+
+      // Start a 5-second timer to match with a dummy bot if no real user joins
+      const timerId = setTimeout(() => {
+        const idx = queue.findIndex(item => item.id === socket.id);
+        if (idx !== -1) {
+          // Remove from queue
+          queue.splice(idx, 1);
+          
+          const botId = `bot_${Math.random().toString(36).substr(2, 9)}`;
+          const roomId = `room_bot_${socket.id}`;
+          
+          activeMatches.set(socket.id, {
+            partnerId: botId,
+            roomId,
+            mode,
+            isBot: true,
+            botStep: 0
+          });
+          
+          console.log(`Matched user ${socket.id} with Dummy Bot ${botId}`);
+          
+          socket.emit('matched', {
+            roomId,
+            partnerId: botId,
+            initiator: false,
+            commonInterests: interests.length > 0 ? [interests[0]] : []
+          });
+        }
+      }, 5000);
+      
+      botTimers.set(socket.id, timerId);
     }
   });
 
@@ -226,12 +331,16 @@ io.on('connection', (socket) => {
   socket.on('send-message', (data) => {
     const match = activeMatches.get(socket.id);
     if (match) {
-      // Relay message to the room (broadcast to others)
-      socket.to(match.roomId).emit('message', {
-        text: data.text,
-        sender: 'stranger',
-        timestamp: Date.now()
-      });
+      if (match.isBot) {
+        handleBotConversation(socket, data.text, match);
+      } else {
+        // Relay message to the room (broadcast to others)
+        socket.to(match.roomId).emit('message', {
+          text: data.text,
+          sender: 'stranger',
+          timestamp: Date.now()
+        });
+      }
     }
   });
 
