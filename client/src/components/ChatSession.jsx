@@ -65,6 +65,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const [localStreamReady, setLocalStreamReady] = useState(mode !== 'video');
   const [isBotMatch, setIsBotMatch] = useState(false);
   const [botVideoUrl, setBotVideoUrl] = useState('');
+  const [botName, setBotName] = useState('Stranger');
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -75,6 +76,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const typingTimeoutRef = useRef(null);
   const confirmTimeoutRef = useRef(null);
   const partnerIdRef = useRef(null);
+  const iceCandidatesQueueRef = useRef([]);
 
   // 1. Initial local video setup (if in video mode)
   useEffect(() => {
@@ -144,7 +146,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       ]);
     });
 
-    socket.on('matched', async ({ roomId, partnerId, initiator, commonInterests }) => {
+    socket.on('matched', async ({ roomId, partnerId, initiator, commonInterests, botName: incomingBotName, botVideoUrl: incomingBotVideoUrl }) => {
       setStatus('matched');
       setIsPartnerTyping(false);
       setStopButtonState('standard');
@@ -169,16 +171,18 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       // WebRTC Setup (if video mode)
       if (mode === 'video') {
         if (isBot) {
-          // Play simulated looping stock video for the chatbot (CORS enabled raw github links)
-          const botVideos = [
-            'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/head-pose-face-detection-female-and-male.mp4',
-            'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/face-demographics-walking.mp4'
-          ];
-          // Pick a random video
-          const randomVideo = botVideos[Math.floor(Math.random() * botVideos.length)];
-          setBotVideoUrl(randomVideo);
+          setBotVideoUrl(incomingBotVideoUrl);
+          setBotName(incomingBotName || 'Stranger');
         } else {
+          setBotName('Stranger');
+          setBotVideoUrl('');
           setupPeerConnection(initiator);
+        }
+      } else {
+        if (isBot) {
+          setBotName(incomingBotName || 'Stranger');
+        } else {
+          setBotName('Stranger');
         }
       }
     });
@@ -204,6 +208,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       closePeerConnection();
       setBotVideoUrl('');
       setIsBotMatch(false);
+      setBotName('Stranger');
       setMessages(prev => [
         ...prev,
         { key: `disc-${Date.now()}`, sender: 'system', text: 'Stranger has disconnected.' }
@@ -219,6 +224,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         socket.emit('signal:answer', { answer });
+        await processIceQueue();
       } catch (err) {
         console.error('Error handling RTC offer:', err);
       }
@@ -229,6 +235,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       if (!pc) return;
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(answer));
+        await processIceQueue();
       } catch (err) {
         console.error('Error handling RTC answer:', err);
       }
@@ -237,10 +244,14 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     socket.on('signal:ice-candidate', async ({ candidate }) => {
       const pc = peerConnectionRef.current;
       if (!pc) return;
-      try {
-        await pc.addIceCandidate(new RTCIceCandidate(candidate));
-      } catch (err) {
-        console.error('Error adding RTC candidate:', err);
+      if (pc.remoteDescription && pc.remoteDescription.type) {
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (err) {
+          console.error('Error adding RTC candidate:', err);
+        }
+      } else {
+        iceCandidatesQueueRef.current.push(candidate);
       }
     });
 
@@ -326,6 +337,19 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     }
   };
 
+  const processIceQueue = async () => {
+    const pc = peerConnectionRef.current;
+    if (!pc || !pc.remoteDescription) return;
+    while (iceCandidatesQueueRef.current.length > 0) {
+      const candidate = iceCandidatesQueueRef.current.shift();
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) {
+        console.error('Error adding queued RTC candidate:', err);
+      }
+    }
+  };
+
   const closePeerConnection = () => {
     if (peerConnectionRef.current) {
       peerConnectionRef.current.onicecandidate = null;
@@ -338,6 +362,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       remoteVideoRef.current.src = "";
       remoteVideoRef.current.removeAttribute('src');
     }
+    iceCandidatesQueueRef.current = [];
   };
 
   // Trigger loading and playing the bot video reactively when the source URL changes
@@ -417,6 +442,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       closePeerConnection();
       setBotVideoUrl('');
       setIsBotMatch(false);
+      setBotName('Stranger');
       setMessages(prev => [
         ...prev,
         { key: `disc-${Date.now()}`, sender: 'system', text: 'You disconnected.' }
@@ -429,6 +455,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
         setStopButtonState('standard');
         setBotVideoUrl('');
         setIsBotMatch(false);
+        setBotName('Stranger');
         socket.emit('join-queue', { mode, interests });
       }
     }
@@ -480,7 +507,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
             )}
             <div className="video-label">
               <Sparkles size={14} style={{ color: 'var(--accent)' }} />
-              <span>Stranger</span>
+              <span>{isBotMatch ? botName : 'Stranger'}</span>
             </div>
           </div>
 
@@ -549,7 +576,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
             <div key={msg.key} className={`message ${msg.sender}`}>
               {msg.sender !== 'system' && (
                 <span className="message-label">
-                  {msg.sender === 'you' ? 'You' : 'Stranger'}
+                  {msg.sender === 'you' ? 'You' : (isBotMatch ? botName : 'Stranger')}
                 </span>
               )}
               {msg.sender === 'system' ? (
@@ -563,7 +590,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
           {/* Typing Indicator */}
           {isPartnerTyping && (
             <div className="typing-indicator">
-              Stranger is typing
+              {(isBotMatch ? botName : 'Stranger')} is typing
               <div className="typing-dots">
                 <div className="typing-dot"></div>
                 <div className="typing-dot"></div>

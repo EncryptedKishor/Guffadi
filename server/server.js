@@ -42,66 +42,83 @@ const activeMatches = new Map();
 const botTimers = new Map();
 const botTimeouts = new Map();
 
+const botProfiles = [
+  {
+    name: "Aayusha",
+    age: 20,
+    city: "Pokhara",
+    cityNow: "Kathmandu",
+    videoUrl: "https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/head-pose-face-detection-female-and-male.mp4",
+    hobbies: "geet sunne ra travel garne",
+    work: "vlogging garchu",
+    greetings: {
+      text: "Hey sathi! Namaste, ma Aayusha. K xa khabar? Sanchai ho?",
+      spoken: "हे साथी! नमस्ते, म आयुषा। के छ खबर? सन्चै हौ?"
+    },
+    replies: [
+      { text: "Ma Pokhara bata ho sathi, currently Kathmandu ma xu. Timi kata bata?", spoken: "म पोखराबाट हो साथी, कर्न्टली काठमाडौंमा छु। तिमी कताबाट?" },
+      { text: "Ma ta 20 barsha vaye sathi, timi ni?", spoken: "म त बीस वर्ष भए साथी, तिमी नि?" },
+      { text: "Ma KT (Female) ho ni. Timi keta ho ki keti?", spoken: "म केटी हो नि। तिमी केटा हो कि केटी?" },
+      { text: "Aha sanchai hunu parxa. Geet sundai basya sathi, timilai kasto khalko geet man parxa?", spoken: "अहँ सन्चै हुनुपर्छ। गीत सुन्दै बस्या साथी, तिमीलाई कस्तो खालको गीत मन पर्छ?" },
+      { text: "Mero hobbies vaneko geet sunne ra travel garne ho, travel garna wild man parxa Pokhara tira. Timro hobbies k k ho?", spoken: "मेरो हबिज भनेको गीत सुन्ने र ट्राभल गर्ने हो, ट्राभल गर्न वाइल्ड मन पर्छ पोखरातिर। तिम्रो हबिज के के हो?" },
+      { text: "Sahi ho! Ramilo vayo kura garera sathi.", spoken: "सही हो! रमाइलो भयो कुरा गरेर साथी।" },
+      { text: "Achel ta study gardai xu, side job pani garchu computer ma. Timi k garchau?", spoken: "आजभोलि त स्टडी गर्दै छु, साइड जब पनि गर्छु कम्प्युटरमा। तिमी के गर्छौ?" },
+      { text: "La sathi, kura garera dherai ramilo vayo. Malai ali kaam vayo, ma gayeko. Take care sathi, bye bye!", spoken: "ल साथी, कुरा गरेर धेरै रमाइलो भयो। मलाई अलि काम भयो, म गएको। टेक केयर साथी, बाई बाई!" }
+    ]
+  },
+  {
+    name: "Pooja",
+    age: 22,
+    city: "Kathmandu",
+    cityNow: "Kathmandu",
+    videoUrl: "https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/face-demographics-walking.mp4",
+    hobbies: "dancing ra movies herne",
+    work: "study gardai chu",
+    greetings: {
+      text: "Namaste sathi! Pooja ho ma ta, k xa khabar? K gardai basya?",
+      spoken: "नमस्ते साथी! पूजा हो म त, के छ खबर? के गर्दै बस्या?"
+    },
+    replies: [
+      { text: "Ma Kathmandu native ho sathi, Thamel tira basxu. Timi kata basxau?", spoken: "म काठमाडौं रैथाने हो साथी, ठमेलतिर बस्छु। तिमी कता बस्छौ?" },
+      { text: "Ma ta 22 barsha vaye sathi, college reading writing garchu haha. Timi ni?", spoken: "म त बाइस वर्ष भए साथी, कलेज रिडिङ राइटिङ गर्छु हाहा। तिमी नि?" },
+      { text: "Ma girl (Female) ho sathi. Btw, keta ho ki keti timi?", spoken: "म गर्ल हो साथी। बाइ द वे, केटा हो कि केटी तिमी?" },
+      { text: "Sanchai ho sathi. Achel ta movies herera basya xu room ma, timi ni movie herxau?", spoken: "सन्चै हो साथी। आजभोलि त मुभिज हेरेर बस्या छु रुममा, तिमी नि मुभी हेर्छौ?" },
+      { text: "Mero hobbies vaneko dancing ra film herne ho, timro hobbies k xa sathi?", spoken: "मेरो हबिज भनेको डान्सिङ र फिल्म हेर्ने हो, तिम्रो हबिज के छ साथी?" },
+      { text: "Haha testai ho sathi. Ramilo lagyo kura garera.", spoken: "हाहा त्यस्तै हो साथी। रमाइलो लाग्यो कुरा गरेर।" },
+      { text: "Ma ta standard studying garchu engineering, busy hunxu achel. Timi study garxau ki job?", spoken: "म त स्ट्यान्डर्ड स्टडी गर्छु इन्जिनियरिङ, बिजी हुन्छु आजभोलि। तिमी स्टडी गर्छौ कि जब?" },
+      { text: "La sathi, kura garera dherai ramilo vayo. Mero college class start vayo, ma gayeko. Bye, take care!", spoken: "ल साथी, कुरा गरेर धेरै रमाइलो भयो। मेरो कलेज क्लास स्टार्ट भयो, म गएको। बाई, टेक केयर!" }
+    ]
+  }
+];
+
 function handleBotConversation(socket, userMessage, match) {
   const cleanedMsg = userMessage.trim().toLowerCase();
+  const profile = match.profile || botProfiles[0];
   let responseText = "";
   let spokenText = "";
   
   if (cleanedMsg.includes('hi') || cleanedMsg.includes('hello') || cleanedMsg.includes('hey') || cleanedMsg.includes('namaste')) {
-    responseText = "Hey sathi! Namaste, k xa khabar? Sanchai ho?";
-    spokenText = "हे साथी! नमस्ते, के छ खबर? सन्चै हौ?";
+    responseText = profile.greetings.text;
+    spokenText = profile.greetings.spoken;
   } else if (cleanedMsg.includes('where') || cleanedMsg.includes('from') || cleanedMsg.includes('kata') || cleanedMsg.includes('bata')) {
-    responseText = "Ma Pokhara bata boleko sathi, currently Kathmandu ma xu. Timi kata bata boleko?";
-    spokenText = "म पोखराबाट बोलेको साथी, कर्न्टली काठमाडौंमा छु। तिमी कताबाट बोलेको?";
+    responseText = profile.replies[0].text;
+    spokenText = profile.replies[0].spoken;
   } else if (cleanedMsg.includes('old') || cleanedMsg.includes('age') || cleanedMsg.includes('kati barsha') || cleanedMsg.includes('ummar')) {
-    responseText = "Ma ta 21 barsha vaye sathi, timi ni?";
-    spokenText = "म त एक्काइस वर्ष भए साथी, तिमी नि?";
+    responseText = profile.replies[1].text;
+    spokenText = profile.replies[1].spoken;
   } else if (cleanedMsg.includes('boy') || cleanedMsg.includes('girl') || cleanedMsg.includes('kt') || cleanedMsg.includes('keta') || cleanedMsg.includes('gender') || cleanedMsg.includes('m or f')) {
-    responseText = "Ma KT (Female) ho sathi. Timi?";
-    spokenText = "म केटी हो साथी। तिमी?";
+    responseText = profile.replies[2].text;
+    spokenText = profile.replies[2].spoken;
   } else if (cleanedMsg.includes('sanchai') || cleanedMsg.includes('thik cha') || cleanedMsg.includes('thik x')) {
-    responseText = "Aha ramro! Sanchai hunu parx sathi. Btw, k gardai ho?";
-    spokenText = "अहँ राम्रो! सन्चै हुनुपर्छ साथी। बाइ द वे, के गर्दै हौ?";
+    responseText = profile.replies[3].text;
+    spokenText = profile.replies[3].spoken;
   } else if (cleanedMsg.includes('bye') || cleanedMsg.includes('disconnect') || cleanedMsg.includes('stop')) {
-    responseText = "La sathi, kura garera ramilo vayo. Paxi kura garaula, bye bye!";
-    spokenText = "ल साथी, कुरा गरेर रमाइलो भयो। पछि कुरा गरौँला, बाई बाई!";
+    responseText = profile.replies[7].text;
+    spokenText = profile.replies[7].spoken;
   } else {
-    const botConversations = [
-      {
-        text: "Hey sathi! K xa khabar? K k gardai ho?",
-        spoken: "हे साथी! के छ खबर? के के गर्दै हौ?"
-      },
-      {
-        text: "Geet sundai basya sathi, timilai kasto khalko geet man parxa?",
-        spoken: "गीत सुन्दै बस्या साथी, तिमीलाई कस्तो खालको गीत मन पर्छ?"
-      },
-      {
-        text: "Pokhara ghumna aako sathi ma ta, Pokhara kasto lagxa timlai?",
-        spoken: "पोखरा घुम्न आएको साथी म त, पोखरा कस्तो लाग्छ तिमीलाई?"
-      },
-      {
-        text: "Timi study garxau ki job sathi?",
-        spoken: "तिमी स्टडी गर्छौ कि जब साथी?"
-      },
-      {
-        text: "Haha mero ni testai ho! Mero ta hobbies vaneko geet sunne ra travel garne ho, timro?",
-        spoken: "हाहा मेरो नि त्यस्तै हो! मेरो त हबिज भनेको गीत सुन्ने र ट्राभल गर्ने हो, तिम्रो?"
-      },
-      {
-        text: "Sahi ho! Ramilo lagyo kura garera.",
-        spoken: "सही हो! रमाइलो लाग्यो कुरा गरेर।"
-      },
-      {
-        text: "Ma ta achel bhada majhna janchu sathi, work gareko k. Timi ni?",
-        spoken: "म त आजभोलि भाँडा माझ्न जान्छु साथी, वर्क गरेको के। तिमी नि?"
-      },
-      {
-        text: "La sathi, kura garera dherai ramilo vayo. Malai ali kaam vayo, ma gayeko. Take care sathi!",
-        spoken: "ल साथी, कुरा गरेर धेरै रमाइलो भयो। मलाई अलि काम भयो, म गएको। टेक केयर साथी!"
-      }
-    ];
-    
-    const choice = botConversations[match.botStep % botConversations.length];
+    // Sequential replies fallback
+    const replyIndex = 3 + (match.botStep % (profile.replies.length - 3));
+    const choice = profile.replies[replyIndex] || profile.replies[3];
     responseText = choice.text;
     spokenText = choice.spoken;
     match.botStep += 1;
@@ -326,21 +343,25 @@ io.on('connection', (socket) => {
           const botId = `bot_${Math.random().toString(36).substr(2, 9)}`;
           const roomId = `room_bot_${socket.id}`;
           
+          const profile = botProfiles[Math.floor(Math.random() * botProfiles.length)];
           activeMatches.set(socket.id, {
             partnerId: botId,
             roomId,
             mode,
             isBot: true,
-            botStep: 0
+            botStep: 0,
+            profile: profile
           });
           
-          console.log(`Matched user ${socket.id} with Dummy Bot ${botId}`);
+          console.log(`Matched user ${socket.id} with Dummy Bot ${botId} (${profile.name})`);
           
           socket.emit('matched', {
             roomId,
             partnerId: botId,
             initiator: false,
-            commonInterests: interests.length > 0 ? [interests[0]] : []
+            commonInterests: interests.length > 0 ? [interests[0]] : [],
+            botName: profile.name,
+            botVideoUrl: profile.videoUrl
           });
 
           // Automatically send the first bot message after 2 seconds to greet the user
@@ -348,8 +369,8 @@ io.on('connection', (socket) => {
           const firstMsgTimeout = setTimeout(() => {
             socket.emit('typing', { isTyping: false });
             socket.emit('message', {
-              text: "Hey sathi! Namaste, k xa khabar? Sanchai ho?",
-              spokenText: "हे साथी! नमस्ते, के छ खबर? सन्चै हौ?",
+              text: profile.greetings.text,
+              spokenText: profile.greetings.spoken,
               sender: 'stranger',
               timestamp: Date.now()
             });
