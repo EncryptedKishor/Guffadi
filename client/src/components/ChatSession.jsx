@@ -169,9 +169,10 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       // WebRTC Setup (if video mode)
       if (mode === 'video') {
         if (isBot) {
-          // Play simulated looping stock video for the chatbot (CORS enabled raw github link)
+          // Play simulated looping stock video for the chatbot (CORS enabled raw github links)
           const botVideos = [
-            'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/head-pose-face-detection-female-and-male.mp4'
+            'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/head-pose-face-detection-female-and-male.mp4',
+            'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/face-demographics-walking.mp4'
           ];
           // Pick a random video
           const randomVideo = botVideos[Math.floor(Math.random() * botVideos.length)];
