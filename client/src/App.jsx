@@ -56,6 +56,12 @@ export default function App() {
   }, []);
 
   const handleStartChat = (selectedMode) => {
+    // Unlock SpeechSynthesis for mobile/Safari by playing a silent string synchronously in click handler
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance(' ');
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+    }
     setMode(selectedMode);
     setView('chat');
   };

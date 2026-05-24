@@ -9,13 +9,12 @@ if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
   };
 }
 
-function speakText(text) {
+function speakText(text, spokenText) {
   if (!('speechSynthesis' in window)) return;
   
   // Cancel any ongoing speech
   window.speechSynthesis.cancel();
   
-  const utterance = new SpeechSynthesisUtterance(text);
   const voices = speechVoices.length > 0 ? speechVoices : window.speechSynthesis.getVoices();
   
   // Find a Nepali, Hindi, or Indian English voice for natural South Asian pronunciation tone
@@ -28,18 +27,30 @@ function speakText(text) {
                       voices.find(v => v.name.toLowerCase().includes('female')) ||
                       voices[0];
                       
+  // Fallback to Romanized text if chosen voice is not a South Asian language (Hindi, Nepali, Indian English).
+  // This prevents English/Western voices from playing silence when fed Devanagari text.
+  const isSouthAsianVoice = chosenVoice && (
+    chosenVoice.lang.startsWith('ne') || 
+    chosenVoice.lang.startsWith('hi') || 
+    chosenVoice.lang.startsWith('en-IN')
+  );
+  
+  const textToSpeak = isSouthAsianVoice ? (spokenText || text) : text;
+  const finalUtterance = new SpeechSynthesisUtterance(textToSpeak);
+                      
   if (chosenVoice) {
-    utterance.voice = chosenVoice;
-    utterance.lang = chosenVoice.lang;
+    finalUtterance.voice = chosenVoice;
+    finalUtterance.lang = chosenVoice.lang;
   } else {
-    utterance.lang = 'ne-NP';
+    finalUtterance.lang = 'ne-NP';
   }
   
-  utterance.pitch = 1.15; // Slightly higher pitch for female accent
-  utterance.rate = 0.9;   // Friendly, normal speed
+  finalUtterance.pitch = 1.15; // Slightly higher pitch for female accent
+  finalUtterance.rate = 0.9;   // Friendly, normal speed
+  finalUtterance.volume = 1.0; // Max volume
   
   setTimeout(() => {
-    window.speechSynthesis.speak(utterance);
+    window.speechSynthesis.speak(finalUtterance);
   }, 100);
 }
 
@@ -158,12 +169,9 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       // WebRTC Setup (if video mode)
       if (mode === 'video') {
         if (isBot) {
-          // Play simulated looping stock video for the chatbot
+          // Play simulated looping stock video for the chatbot (CORS enabled raw github link)
           const botVideos = [
-            'https://assets.mixkit.co/videos/preview/mixkit-young-woman-smiling-at-camera-40748-large.mp4',
-            'https://assets.mixkit.co/videos/preview/mixkit-happy-girl-waving-her-hand-at-the-camera-40243-large.mp4',
-            'https://assets.mixkit.co/videos/preview/mixkit-woman-smiling-with-neon-lights-background-34532-large.mp4',
-            'https://assets.mixkit.co/videos/preview/mixkit-portrait-of-a-woman-smiling-at-the-camera-41883-large.mp4'
+            'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/head-pose-face-detection-female-and-male.mp4'
           ];
           // Pick a random video
           const randomVideo = botVideos[Math.floor(Math.random() * botVideos.length)];
@@ -180,7 +188,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
 
       // Trigger text-to-speech if matched with a bot
       if (partnerIdRef.current && partnerIdRef.current.startsWith('bot_')) {
-        speakText(msg.spokenText || msg.text);
+        speakText(msg.text, msg.spokenText);
       }
     });
 
@@ -326,8 +334,22 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     }
     if (remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = null;
+      remoteVideoRef.current.src = "";
+      remoteVideoRef.current.removeAttribute('src');
     }
   };
+
+  // Trigger loading and playing the bot video reactively when the source URL changes
+  useEffect(() => {
+    if (isBotMatch && botVideoUrl && remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null; // Clear any active WebRTC stream
+      remoteVideoRef.current.src = botVideoUrl;
+      remoteVideoRef.current.load();
+      remoteVideoRef.current.play().catch(e => {
+        console.warn("Bot video autoplay failed:", e);
+      });
+    }
+  }, [botVideoUrl, isBotMatch]);
 
   // Typing event sender (debounced)
   const handleInputChange = (e) => {
@@ -448,7 +470,6 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
                 playsInline 
                 muted={isBotMatch}
                 loop={isBotMatch}
-                src={isBotMatch ? botVideoUrl : undefined}
               />
             ) : (
               <div className="video-spinner">
