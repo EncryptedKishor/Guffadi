@@ -9,6 +9,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const [micMuted, setMicMuted] = useState(false);
   const [videoDisabled, setVideoDisabled] = useState(false);
   const [stopButtonState, setStopButtonState] = useState('standard'); // 'standard' | 'confirm' | 'new'
+  const [localStreamReady, setLocalStreamReady] = useState(mode !== 'video');
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -39,6 +40,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
         }
+        setLocalStreamReady(true);
       } catch (err) {
         console.error('Error obtaining audio/video stream:', err);
         setMessages(prev => [
@@ -66,6 +68,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   // 2. Join the matchmaking queue
   useEffect(() => {
     if (!socket) return;
+    if (mode === 'video' && !localStreamReady) return;
 
     // Reset components states
     setMessages([{ key: 'system-init', sender: 'system', text: 'Connecting to server...' }]);
@@ -174,7 +177,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       socket.off('signal:ice-candidate');
       socket.emit('leave-queue');
     };
-  }, [socket, mode, interests]);
+  }, [socket, mode, interests, localStreamReady]);
 
   // 3. Autoscroll to bottom when chat updates
   useEffect(() => {
