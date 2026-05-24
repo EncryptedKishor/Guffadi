@@ -9,7 +9,7 @@ if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
   };
 }
 
-function speakText(text, spokenText) {
+function speakText(text, spokenText, onEndCallback) {
   if (!('speechSynthesis' in window)) return;
   
   // Cancel any ongoing speech
@@ -49,6 +49,21 @@ function speakText(text, spokenText) {
   finalUtterance.rate = 0.9;   // Friendly, normal speed
   finalUtterance.volume = 1.0; // Max volume
   
+  if (onEndCallback) {
+    finalUtterance.onend = onEndCallback;
+    
+    // Safety fallback timeout
+    const safetyTimeout = setTimeout(() => {
+      finalUtterance.onend = null;
+      onEndCallback();
+    }, textToSpeak.length * 120 + 2000);
+    
+    finalUtterance.onerror = () => {
+      clearTimeout(safetyTimeout);
+      onEndCallback();
+    };
+  }
+  
   setTimeout(() => {
     window.speechSynthesis.speak(finalUtterance);
   }, 100);
@@ -66,6 +81,10 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const [isBotMatch, setIsBotMatch] = useState(false);
   const [botVideoUrl, setBotVideoUrl] = useState('');
   const [botName, setBotName] = useState('Stranger');
+  const [isListening, setIsListening] = useState(false);
+  const [voiceModeActive, setVoiceModeActive] = useState(false);
+  const voiceModeActiveRef = useRef(false);
+  const recognitionRef = useRef(null);
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -155,6 +174,15 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       const isBot = partnerId.startsWith('bot_');
       setIsBotMatch(isBot);
 
+      // Reset Voice Mode on new match
+      setVoiceModeActive(false);
+      voiceModeActiveRef.current = false;
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {}
+      }
+
       const introMessages = [
         { key: 'match-1', sender: 'system', text: isBot ? 'You are now chatting with a random Nepali friend!' : 'You are now chatting with a random stranger!' }
       ];
@@ -193,7 +221,14 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
 
       // Trigger text-to-speech if matched with a bot
       if (partnerIdRef.current && partnerIdRef.current.startsWith('bot_')) {
-        speakText(msg.text, msg.spokenText);
+        speakText(msg.text, msg.spokenText, () => {
+          // If voice mode is active, resume listening
+          if (voiceModeActiveRef.current && recognitionRef.current) {
+            try {
+              recognitionRef.current.start();
+            } catch (e) {}
+          }
+        });
       }
     });
 
@@ -363,6 +398,15 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       remoteVideoRef.current.removeAttribute('src');
     }
     iceCandidatesQueueRef.current = [];
+    
+    // Stop voice mode on close
+    setVoiceModeActive(false);
+    voiceModeActiveRef.current = false;
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {}
+    }
   };
 
   // Trigger loading and playing the bot video reactively when the source URL changes
@@ -376,6 +420,89 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       });
     }
   }, [botVideoUrl, isBotMatch]);
+
+  // Speech Recognition hook for Hands-free Voice Mode
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const rec = new SpeechRecognition();
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = 'ne-NP'; // Default to Nepali speech recognition
+
+    rec.onstart = () => {
+      setIsListening(true);
+    };
+
+    rec.onend = () => {
+      setIsListening(false);
+      // Restart if voice mode is still active and TTS is not currently speaking
+      setTimeout(() => {
+        if (voiceModeActiveRef.current && !window.speechSynthesis.speaking) {
+          try {
+            rec.start();
+          } catch (e) {}
+        }
+      }, 500);
+    };
+
+    rec.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      if (transcript.trim() && socket && status === 'matched') {
+        socket.emit('send-message', { text: transcript });
+        setMessages(prev => [
+          ...prev,
+          { key: `msg-you-${Date.now()}`, sender: 'you', text: transcript, timestamp: Date.now() }
+        ]);
+      }
+    };
+
+    rec.onerror = (e) => {
+      console.warn("Speech recognition error:", e.error);
+      setIsListening(false);
+    };
+
+    recognitionRef.current = rec;
+
+    return () => {
+      try {
+        rec.stop();
+      } catch (err) {}
+    };
+  }, [socket, status]);
+
+  const toggleVoiceMode = () => {
+    if (!recognitionRef.current) {
+      alert("Speech recognition is not supported in this browser. Please use Google Chrome or Safari.");
+      return;
+    }
+
+    if ('speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance(' ');
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+    }
+
+    const nextState = !voiceModeActive;
+    setVoiceModeActive(nextState);
+    voiceModeActiveRef.current = nextState;
+
+    if (nextState) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      try {
+        recognitionRef.current.start();
+      } catch (e) {
+        console.warn("Speech recognition start failed:", e);
+      }
+    } else {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {}
+    }
+  };
 
   // Typing event sender (debounced)
   const handleInputChange = (e) => {
@@ -622,13 +749,52 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
                 : 'Stop'}
             </button>
 
+            {isBotMatch && (
+              <button
+                type="button"
+                onClick={toggleVoiceMode}
+                className={`voice-mode-btn ${voiceModeActive ? 'active' : ''}`}
+                title={voiceModeActive ? "Disable Hands-Free Voice Mode" : "Enable Hands-Free Voice Mode"}
+                style={{
+                  background: voiceModeActive 
+                    ? 'linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%)' 
+                    : 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  borderRadius: '12px',
+                  padding: '0 15px',
+                  height: '46px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: 'pointer',
+                  marginRight: '8px',
+                  transition: 'all 0.3s ease',
+                  boxShadow: voiceModeActive ? '0 0 15px var(--accent)' : 'none'
+                }}
+              >
+                <Mic size={18} className={isListening ? 'pulse-mic' : ''} />
+                <span className="voice-btn-text" style={{ fontSize: '0.85rem', fontWeight: '600' }}>
+                  {voiceModeActive ? 'Voice: ON' : 'Voice Mode'}
+                </span>
+              </button>
+            )}
+
             <div className="chat-input-container">
               <input
                 type="text"
-                placeholder={status === 'matched' ? "Type a message or press Esc to skip..." : "Waiting for match..."}
+                placeholder={
+                  status !== 'matched' 
+                    ? "Waiting for match..." 
+                    : isListening 
+                    ? "🎤 Listening to your voice... Speak now!" 
+                    : voiceModeActive 
+                    ? "🎙️ Waiting for AI response..." 
+                    : "Type a message or press Esc to skip..."
+                }
                 value={inputText}
                 onChange={handleInputChange}
-                disabled={status !== 'matched'}
+                disabled={status !== 'matched' || voiceModeActive}
               />
             </div>
 

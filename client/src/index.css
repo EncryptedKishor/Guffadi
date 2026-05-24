@@ -762,3 +762,24 @@ body::before {
   content: "[SYSTEM_METRIC]: ";
   color: var(--text-muted);
 }
+
+/* Hands-free Voice Mode animations */
+.pulse-mic {
+  animation: mic-pulsate 1.2s ease-in-out infinite;
+}
+
+@keyframes mic-pulsate {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 2px var(--accent));
+  }
+  50% {
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 8px var(--accent-glow));
+    color: var(--accent);
+  }
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 2px var(--accent));
+  }
+}

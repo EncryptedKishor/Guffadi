@@ -97,22 +97,22 @@ function handleBotConversation(socket, userMessage, match) {
   let responseText = "";
   let spokenText = "";
   
-  if (cleanedMsg.includes('hi') || cleanedMsg.includes('hello') || cleanedMsg.includes('hey') || cleanedMsg.includes('namaste')) {
+  if (cleanedMsg.includes('hi') || cleanedMsg.includes('hello') || cleanedMsg.includes('hey') || cleanedMsg.includes('namaste') || cleanedMsg.includes('नमस्ते') || cleanedMsg.includes('नम्स्ते')) {
     responseText = profile.greetings.text;
     spokenText = profile.greetings.spoken;
-  } else if (cleanedMsg.includes('where') || cleanedMsg.includes('from') || cleanedMsg.includes('kata') || cleanedMsg.includes('bata')) {
+  } else if (cleanedMsg.includes('where') || cleanedMsg.includes('from') || cleanedMsg.includes('kata') || cleanedMsg.includes('bata') || cleanedMsg.includes('कता') || cleanedMsg.includes('बाट') || cleanedMsg.includes('बस्छौ') || cleanedMsg.includes('बस्ने')) {
     responseText = profile.replies[0].text;
     spokenText = profile.replies[0].spoken;
-  } else if (cleanedMsg.includes('old') || cleanedMsg.includes('age') || cleanedMsg.includes('kati barsha') || cleanedMsg.includes('ummar')) {
+  } else if (cleanedMsg.includes('old') || cleanedMsg.includes('age') || cleanedMsg.includes('kati barsha') || cleanedMsg.includes('ummar') || cleanedMsg.includes('वर्ष') || cleanedMsg.includes('उमेर') || cleanedMsg.includes('कति वर्ष')) {
     responseText = profile.replies[1].text;
     spokenText = profile.replies[1].spoken;
-  } else if (cleanedMsg.includes('boy') || cleanedMsg.includes('girl') || cleanedMsg.includes('kt') || cleanedMsg.includes('keta') || cleanedMsg.includes('gender') || cleanedMsg.includes('m or f')) {
+  } else if (cleanedMsg.includes('boy') || cleanedMsg.includes('girl') || cleanedMsg.includes('kt') || cleanedMsg.includes('keta') || cleanedMsg.includes('gender') || cleanedMsg.includes('m or f') || cleanedMsg.includes('केटी') || cleanedMsg.includes('केटा') || cleanedMsg.includes('महिला') || cleanedMsg.includes('पुरुष')) {
     responseText = profile.replies[2].text;
     spokenText = profile.replies[2].spoken;
-  } else if (cleanedMsg.includes('sanchai') || cleanedMsg.includes('thik cha') || cleanedMsg.includes('thik x')) {
+  } else if (cleanedMsg.includes('sanchai') || cleanedMsg.includes('thik cha') || cleanedMsg.includes('thik x') || cleanedMsg.includes('सन्चै') || cleanedMsg.includes('ठीक') || cleanedMsg.includes('ठीकै')) {
     responseText = profile.replies[3].text;
     spokenText = profile.replies[3].spoken;
-  } else if (cleanedMsg.includes('bye') || cleanedMsg.includes('disconnect') || cleanedMsg.includes('stop')) {
+  } else if (cleanedMsg.includes('bye') || cleanedMsg.includes('disconnect') || cleanedMsg.includes('stop') || cleanedMsg.includes('बाई') || cleanedMsg.includes('बिदा') || cleanedMsg.includes('टाटा')) {
     responseText = profile.replies[7].text;
     spokenText = profile.replies[7].spoken;
   } else {
