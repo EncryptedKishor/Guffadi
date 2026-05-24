@@ -45,33 +45,65 @@ const botTimeouts = new Map();
 function handleBotConversation(socket, userMessage, match) {
   const cleanedMsg = userMessage.trim().toLowerCase();
   let responseText = "";
+  let spokenText = "";
   
-  if (cleanedMsg.includes('hi') || cleanedMsg.includes('hello') || cleanedMsg.includes('hey')) {
-    responseText = "Hey! What's up? How's your day going?";
-  } else if (cleanedMsg.includes('where') || cleanedMsg.includes('from') || cleanedMsg.includes('location')) {
-    responseText = "I'm from Kathmandu, currently staying in Pokhara. What about you?";
-  } else if (cleanedMsg.includes('old') || cleanedMsg.includes('age') || cleanedMsg.includes('years')) {
-    responseText = "I'm 21! What about you?";
-  } else if (cleanedMsg.includes('boy') || cleanedMsg.includes('girl') || cleanedMsg.includes('m or f') || cleanedMsg.includes('gender')) {
-    responseText = "F! What about you?";
-  } else if (cleanedMsg.includes('no') || cleanedMsg.includes('yes') || cleanedMsg.includes('yeah')) {
-    responseText = "Ah, cool. So what are your hobbies?";
+  if (cleanedMsg.includes('hi') || cleanedMsg.includes('hello') || cleanedMsg.includes('hey') || cleanedMsg.includes('namaste')) {
+    responseText = "Hey sathi! Namaste, k xa khabar? Sanchai ho?";
+    spokenText = "हे साथी! नमस्ते, के छ खबर? सन्चै हौ?";
+  } else if (cleanedMsg.includes('where') || cleanedMsg.includes('from') || cleanedMsg.includes('kata') || cleanedMsg.includes('bata')) {
+    responseText = "Ma Pokhara bata boleko sathi, currently Kathmandu ma xu. Timi kata bata boleko?";
+    spokenText = "म पोखराबाट बोलेको साथी, कर्न्टली काठमाडौंमा छु। तिमी कताबाट बोलेको?";
+  } else if (cleanedMsg.includes('old') || cleanedMsg.includes('age') || cleanedMsg.includes('kati barsha') || cleanedMsg.includes('ummar')) {
+    responseText = "Ma ta 21 barsha vaye sathi, timi ni?";
+    spokenText = "म त एक्काइस वर्ष भए साथी, तिमी नि?";
+  } else if (cleanedMsg.includes('boy') || cleanedMsg.includes('girl') || cleanedMsg.includes('kt') || cleanedMsg.includes('keta') || cleanedMsg.includes('gender') || cleanedMsg.includes('m or f')) {
+    responseText = "Ma KT (Female) ho sathi. Timi?";
+    spokenText = "म केटी हो साथी। तिमी?";
+  } else if (cleanedMsg.includes('sanchai') || cleanedMsg.includes('thik cha') || cleanedMsg.includes('thik x')) {
+    responseText = "Aha ramro! Sanchai hunu parx sathi. Btw, k gardai ho?";
+    spokenText = "अहँ राम्रो! सन्चै हुनुपर्छ साथी। बाइ द वे, के गर्दै हौ?";
   } else if (cleanedMsg.includes('bye') || cleanedMsg.includes('disconnect') || cleanedMsg.includes('stop')) {
-    responseText = "Alright, bye!";
+    responseText = "La sathi, kura garera ramilo vayo. Paxi kura garaula, bye bye!";
+    spokenText = "ल साथी, कुरा गरेर रमाइलो भयो। पछि कुरा गरौँला, बाई बाई!";
   } else {
     const botConversations = [
-      "Hey! How's it going?",
-      "What are you up to?",
-      "Cool! I'm just listening to some music. What kind of music do you like?",
-      "That's awesome. I'm actually from Pokhara! Where are you chatting from?",
-      "Oh nice! What do you do for a living / study?",
-      "Haha same here! By the way, what are your hobbies?",
-      "That sounds like fun. I love hiking and reading books.",
-      "Well, it was nice talking to you! I have to go now. Bye!",
-      "I have to go do some chores now, talk to you later!"
+      {
+        text: "Hey sathi! K xa khabar? K k gardai ho?",
+        spoken: "हे साथी! के छ खबर? के के गर्दै हौ?"
+      },
+      {
+        text: "Geet sundai basya sathi, timilai kasto khalko geet man parxa?",
+        spoken: "गीत सुन्दै बस्या साथी, तिमीलाई कस्तो खालको गीत मन पर्छ?"
+      },
+      {
+        text: "Pokhara ghumna aako sathi ma ta, Pokhara kasto lagxa timlai?",
+        spoken: "पोखरा घुम्न आएको साथी म त, पोखरा कस्तो लाग्छ तिमीलाई?"
+      },
+      {
+        text: "Timi study garxau ki job sathi?",
+        spoken: "तिमी स्टडी गर्छौ कि जब साथी?"
+      },
+      {
+        text: "Haha mero ni testai ho! Mero ta hobbies vaneko geet sunne ra travel garne ho, timro?",
+        spoken: "हाहा मेरो नि त्यस्तै हो! मेरो त हबिज भनेको गीत सुन्ने र ट्राभल गर्ने हो, तिम्रो?"
+      },
+      {
+        text: "Sahi ho! Ramilo lagyo kura garera.",
+        spoken: "सही हो! रमाइलो लाग्यो कुरा गरेर।"
+      },
+      {
+        text: "Ma ta achel bhada majhna janchu sathi, work gareko k. Timi ni?",
+        spoken: "म त आजभोलि भाँडा माझ्न जान्छु साथी, वर्क गरेको के। तिमी नि?"
+      },
+      {
+        text: "La sathi, kura garera dherai ramilo vayo. Malai ali kaam vayo, ma gayeko. Take care sathi!",
+        spoken: "ल साथी, कुरा गरेर धेरै रमाइलो भयो। मलाई अलि काम भयो, म गएको। टेक केयर साथी!"
+      }
     ];
     
-    responseText = botConversations[match.botStep % botConversations.length];
+    const choice = botConversations[match.botStep % botConversations.length];
+    responseText = choice.text;
+    spokenText = choice.spoken;
     match.botStep += 1;
   }
   
@@ -87,6 +119,7 @@ function handleBotConversation(socket, userMessage, match) {
     socket.emit('typing', { isTyping: false });
     socket.emit('message', {
       text: responseText,
+      spokenText: spokenText,
       sender: 'stranger',
       timestamp: Date.now()
     });
@@ -309,6 +342,19 @@ io.on('connection', (socket) => {
             initiator: false,
             commonInterests: interests.length > 0 ? [interests[0]] : []
           });
+
+          // Automatically send the first bot message after 2 seconds to greet the user
+          socket.emit('typing', { isTyping: true });
+          const firstMsgTimeout = setTimeout(() => {
+            socket.emit('typing', { isTyping: false });
+            socket.emit('message', {
+              text: "Hey sathi! Namaste, k xa khabar? Sanchai ho?",
+              spokenText: "हे साथी! नमस्ते, के छ खबर? सन्चै हौ?",
+              sender: 'stranger',
+              timestamp: Date.now()
+            });
+          }, 2000);
+          botTimeouts.set(socket.id, firstMsgTimeout);
         }
       }, 5000);
       

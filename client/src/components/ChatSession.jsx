@@ -1,6 +1,48 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Mic, MicOff, Video, VideoOff, Home, AlertCircle, Sparkles } from 'lucide-react';
 
+let speechVoices = [];
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+  speechVoices = window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => {
+    speechVoices = window.speechSynthesis.getVoices();
+  };
+}
+
+function speakText(text) {
+  if (!('speechSynthesis' in window)) return;
+  
+  // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
+  
+  const utterance = new SpeechSynthesisUtterance(text);
+  const voices = speechVoices.length > 0 ? speechVoices : window.speechSynthesis.getVoices();
+  
+  // Find a Nepali, Hindi, or Indian English voice for natural South Asian pronunciation tone
+  const chosenVoice = voices.find(v => v.lang.includes('ne') && v.name.toLowerCase().includes('female')) ||
+                      voices.find(v => v.lang.includes('ne')) ||
+                      voices.find(v => v.lang.includes('hi') && v.name.toLowerCase().includes('female')) ||
+                      voices.find(v => v.lang.includes('hi')) ||
+                      voices.find(v => v.lang.includes('en-IN') && v.name.toLowerCase().includes('female')) ||
+                      voices.find(v => v.lang.includes('en-IN')) ||
+                      voices.find(v => v.name.toLowerCase().includes('female')) ||
+                      voices[0];
+                      
+  if (chosenVoice) {
+    utterance.voice = chosenVoice;
+    utterance.lang = chosenVoice.lang;
+  } else {
+    utterance.lang = 'ne-NP';
+  }
+  
+  utterance.pitch = 1.15; // Slightly higher pitch for female accent
+  utterance.rate = 0.9;   // Friendly, normal speed
+  
+  setTimeout(() => {
+    window.speechSynthesis.speak(utterance);
+  }, 100);
+}
+
 export default function ChatSession({ socket, mode, interests, onLeave }) {
   const [status, setStatus] = useState('connecting'); // 'connecting' | 'waiting' | 'matched' | 'disconnected'
   const [messages, setMessages] = useState([]);
@@ -10,6 +52,8 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const [videoDisabled, setVideoDisabled] = useState(false);
   const [stopButtonState, setStopButtonState] = useState('standard'); // 'standard' | 'confirm' | 'new'
   const [localStreamReady, setLocalStreamReady] = useState(mode !== 'video');
+  const [isBotMatch, setIsBotMatch] = useState(false);
+  const [botVideoUrl, setBotVideoUrl] = useState('');
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -19,6 +63,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const isTypingRef = useRef(false);
   const typingTimeoutRef = useRef(null);
   const confirmTimeoutRef = useRef(null);
+  const partnerIdRef = useRef(null);
 
   // 1. Initial local video setup (if in video mode)
   useEffect(() => {
@@ -92,9 +137,13 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       setStatus('matched');
       setIsPartnerTyping(false);
       setStopButtonState('standard');
+      partnerIdRef.current = partnerId;
+      
+      const isBot = partnerId.startsWith('bot_');
+      setIsBotMatch(isBot);
 
       const introMessages = [
-        { key: 'match-1', sender: 'system', text: 'You are now chatting with a random stranger!' }
+        { key: 'match-1', sender: 'system', text: isBot ? 'You are now chatting with a random Nepali friend!' : 'You are now chatting with a random stranger!' }
       ];
 
       if (commonInterests && commonInterests.length > 0) {
@@ -108,13 +157,31 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
 
       // WebRTC Setup (if video mode)
       if (mode === 'video') {
-        setupPeerConnection(initiator);
+        if (isBot) {
+          // Play simulated looping stock video for the chatbot
+          const botVideos = [
+            'https://assets.mixkit.co/videos/preview/mixkit-young-woman-smiling-at-camera-40748-large.mp4',
+            'https://assets.mixkit.co/videos/preview/mixkit-happy-girl-waving-her-hand-at-the-camera-40243-large.mp4',
+            'https://assets.mixkit.co/videos/preview/mixkit-woman-smiling-with-neon-lights-background-34532-large.mp4',
+            'https://assets.mixkit.co/videos/preview/mixkit-portrait-of-a-woman-smiling-at-the-camera-41883-large.mp4'
+          ];
+          // Pick a random video
+          const randomVideo = botVideos[Math.floor(Math.random() * botVideos.length)];
+          setBotVideoUrl(randomVideo);
+        } else {
+          setupPeerConnection(initiator);
+        }
       }
     });
 
     socket.on('message', (msg) => {
       setIsPartnerTyping(false);
       setMessages(prev => [...prev, { ...msg, key: `msg-${Date.now()}-${Math.random()}` }]);
+
+      // Trigger text-to-speech if matched with a bot
+      if (partnerIdRef.current && partnerIdRef.current.startsWith('bot_')) {
+        speakText(msg.spokenText || msg.text);
+      }
     });
 
     socket.on('typing', ({ isTyping }) => {
@@ -126,6 +193,8 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       setIsPartnerTyping(false);
       setStopButtonState('new');
       closePeerConnection();
+      setBotVideoUrl('');
+      setIsBotMatch(false);
       setMessages(prev => [
         ...prev,
         { key: `disc-${Date.now()}`, sender: 'system', text: 'Stranger has disconnected.' }
@@ -167,6 +236,9 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     });
 
     return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
       socket.off('waiting');
       socket.off('matched');
       socket.off('message');
@@ -310,6 +382,9 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     } else if (stopButtonState === 'confirm') {
       // User confirmed disconnect
       if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
       if (socket) {
         socket.emit('disconnect-chat');
       }
@@ -317,6 +392,8 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       setIsPartnerTyping(false);
       setStopButtonState('new');
       closePeerConnection();
+      setBotVideoUrl('');
+      setIsBotMatch(false);
       setMessages(prev => [
         ...prev,
         { key: `disc-${Date.now()}`, sender: 'system', text: 'You disconnected.' }
@@ -327,6 +404,8 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
         setMessages([{ key: 'system-reinit', sender: 'system', text: 'Connecting to server...' }]);
         setStatus('connecting');
         setStopButtonState('standard');
+        setBotVideoUrl('');
+        setIsBotMatch(false);
         socket.emit('join-queue', { mode, interests });
       }
     }
@@ -367,6 +446,9 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
                 className="video-stream" 
                 autoPlay 
                 playsInline 
+                muted={isBotMatch}
+                loop={isBotMatch}
+                src={isBotMatch ? botVideoUrl : undefined}
               />
             ) : (
               <div className="video-spinner">
