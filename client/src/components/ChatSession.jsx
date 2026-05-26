@@ -9,7 +9,7 @@ if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
   };
 }
 
-function speakText(text, spokenText, onEndCallback) {
+function speakText(text, spokenText, gender, onEndCallback) {
   if (!('speechSynthesis' in window)) return;
   
   // Cancel any ongoing speech
@@ -17,14 +17,20 @@ function speakText(text, spokenText, onEndCallback) {
   
   const voices = speechVoices.length > 0 ? speechVoices : window.speechSynthesis.getVoices();
   
+  const genderKey = gender === 'male' ? 'male' : 'female';
+  const oppositeKey = gender === 'male' ? 'female' : 'male';
+  
   // Find a Nepali, Hindi, or Indian English voice for natural South Asian pronunciation tone
-  const chosenVoice = voices.find(v => v.lang.includes('ne') && v.name.toLowerCase().includes('female')) ||
+  const chosenVoice = voices.find(v => v.lang.includes('ne') && v.name.toLowerCase().includes(genderKey)) ||
+                      voices.find(v => v.lang.includes('ne') && !v.name.toLowerCase().includes(oppositeKey)) ||
+                      voices.find(v => v.lang.includes('hi') && v.name.toLowerCase().includes(genderKey)) ||
+                      voices.find(v => v.lang.includes('hi') && !v.name.toLowerCase().includes(oppositeKey)) ||
+                      voices.find(v => v.lang.includes('en-IN') && v.name.toLowerCase().includes(genderKey)) ||
+                      voices.find(v => v.lang.includes('en-IN') && !v.name.toLowerCase().includes(oppositeKey)) ||
+                      voices.find(v => v.name.toLowerCase().includes(genderKey)) ||
                       voices.find(v => v.lang.includes('ne')) ||
-                      voices.find(v => v.lang.includes('hi') && v.name.toLowerCase().includes('female')) ||
                       voices.find(v => v.lang.includes('hi')) ||
-                      voices.find(v => v.lang.includes('en-IN') && v.name.toLowerCase().includes('female')) ||
                       voices.find(v => v.lang.includes('en-IN')) ||
-                      voices.find(v => v.name.toLowerCase().includes('female')) ||
                       voices[0];
                       
   // Fallback to Romanized text if chosen voice is not a South Asian language (Hindi, Nepali, Indian English).
@@ -45,7 +51,7 @@ function speakText(text, spokenText, onEndCallback) {
     finalUtterance.lang = 'ne-NP';
   }
   
-  finalUtterance.pitch = 1.15; // Slightly higher pitch for female accent
+  finalUtterance.pitch = gender === 'male' ? 0.95 : 1.15; // Slightly lower pitch for male, slightly higher for female
   finalUtterance.rate = 0.9;   // Friendly, normal speed
   finalUtterance.volume = 1.0; // Max volume
   
@@ -81,6 +87,8 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const [isBotMatch, setIsBotMatch] = useState(false);
   const [botVideoUrl, setBotVideoUrl] = useState('');
   const [botName, setBotName] = useState('Stranger');
+  const [botGender, setBotGender] = useState('female');
+  const botGenderRef = useRef('female');
   const [isListening, setIsListening] = useState(false);
   const [voiceModeActive, setVoiceModeActive] = useState(false);
   const voiceModeActiveRef = useRef(false);
@@ -165,7 +173,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       ]);
     });
 
-    socket.on('matched', async ({ roomId, partnerId, initiator, commonInterests, botName: incomingBotName, botVideoUrl: incomingBotVideoUrl }) => {
+    socket.on('matched', async ({ roomId, partnerId, initiator, commonInterests, botName: incomingBotName, botGender: incomingBotGender, botVideoUrl: incomingBotVideoUrl }) => {
       setStatus('matched');
       setIsPartnerTyping(false);
       setStopButtonState('standard');
@@ -173,6 +181,10 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       
       const isBot = partnerId.startsWith('bot_');
       setIsBotMatch(isBot);
+
+      const currentBotGender = incomingBotGender || 'female';
+      setBotGender(currentBotGender);
+      botGenderRef.current = currentBotGender;
 
       // Reset Voice Mode on new match
       setVoiceModeActive(false);
@@ -221,7 +233,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
 
       // Trigger text-to-speech if matched with a bot
       if (partnerIdRef.current && partnerIdRef.current.startsWith('bot_')) {
-        speakText(msg.text, msg.spokenText, () => {
+        speakText(msg.text, msg.spokenText, botGenderRef.current, () => {
           // If voice mode is active, resume listening
           if (voiceModeActiveRef.current && recognitionRef.current) {
             try {
