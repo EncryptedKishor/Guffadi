@@ -12,6 +12,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const [videoDisabled, setVideoDisabled] = useState(false);
   const [stopButtonState, setStopButtonState] = useState('standard'); // 'standard' | 'confirm' | 'new'
   const [localStreamReady, setLocalStreamReady] = useState(mode !== 'video');
+  const [remoteStream, setRemoteStream] = useState(null);
 
 
   const localVideoRef = useRef(null);
@@ -140,7 +141,12 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
 
     // Handle WebSocket signaling messages
     socket.on('signal:offer', async ({ offer }) => {
-      const pc = peerConnectionRef.current;
+      let pc = peerConnectionRef.current;
+      if (!pc) {
+        // If offer arrives before receiver initializes their peer connection, initialize it first.
+        await setupPeerConnection(false);
+        pc = peerConnectionRef.current;
+      }
       if (!pc) return;
       try {
         await pc.setRemoteDescription(new RTCSessionDescription(offer));
@@ -166,8 +172,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
 
     socket.on('signal:ice-candidate', async ({ candidate }) => {
       const pc = peerConnectionRef.current;
-      if (!pc) return;
-      if (pc.remoteDescription && pc.remoteDescription.type) {
+      if (pc && pc.remoteDescription && pc.remoteDescription.type) {
         try {
           await pc.addIceCandidate(new RTCIceCandidate(candidate));
         } catch (err) {
@@ -235,8 +240,8 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
 
       // Handle remote track received
       pc.ontrack = (event) => {
-        if (remoteVideoRef.current && event.streams[0]) {
-          remoteVideoRef.current.srcObject = event.streams[0];
+        if (event.streams[0]) {
+          setRemoteStream(event.streams[0]);
         }
       };
 
@@ -283,7 +288,18 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       remoteVideoRef.current.removeAttribute('src');
     }
     iceCandidatesQueueRef.current = [];
+    setRemoteStream(null);
   };
+
+  // Bind remote stream to video element when it is ready and video element mounts
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().catch(err => {
+        console.warn("Error playing remote video:", err);
+      });
+    }
+  }, [remoteStream, status]);
 
 
 
