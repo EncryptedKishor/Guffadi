@@ -5,33 +5,46 @@ export default function Landing({ onlineCount, interests, setInterests, onStartC
   const [tagInput, setTagInput] = useState('');
   const [localStream, setLocalStream] = useState(null);
   const [cameraError, setCameraError] = useState(false);
-  const videoRef = useRef(null);
-
-  // Start local camera preview for the landing page
-  useEffect(() => {
-    let streamRef = null;
-    async function startCamera() {
-      try {
-        setCameraError(false);
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        setLocalStream(stream);
-        streamRef = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (err) {
-        console.error('Error accessing camera:', err);
-        setCameraError(true);
-      }
+  const [cameraRequested, setCameraRequested] = useState(() => {
+    try {
+      return localStorage.getItem('camera_granted') === 'true';
+    } catch (e) {
+      return false;
     }
-    startCamera();
+  });
+  const videoRef = useRef(null);
+  const activeStreamRef = useRef(null);
 
+  const startCamera = async () => {
+    try {
+      setCameraError(false);
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      setLocalStream(stream);
+      activeStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      try {
+        localStorage.setItem('camera_granted', 'true');
+      } catch (e) {}
+      setCameraRequested(true);
+    } catch (err) {
+      console.error('Error accessing camera:', err);
+      setCameraError(true);
+    }
+  };
+
+  // Start local camera preview if already granted
+  useEffect(() => {
+    if (cameraRequested) {
+      startCamera();
+    }
     return () => {
-      if (streamRef) {
-        streamRef.getTracks().forEach(track => track.stop());
+      if (activeStreamRef.current) {
+        activeStreamRef.current.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [cameraRequested]);
 
   // Sync video source if element mounts/demounts or stream changes
   useEffect(() => {
@@ -130,6 +143,13 @@ export default function Landing({ onlineCount, interests, setInterests, onStartC
                 <CameraOff size={48} className="text-muted" style={{ color: 'var(--rose)' }} />
                 <h3>Webcam Disabled</h3>
                 <p>To use video chat, please allow microphone and camera access in your browser settings.</p>
+                <button 
+                  className="glass-button" 
+                  onClick={startCamera}
+                  style={{ marginTop: '15px', backgroundColor: 'var(--yellow)' }}
+                >
+                  Retry Enable Camera
+                </button>
               </div>
             ) : localStream ? (
               <>
@@ -142,11 +162,24 @@ export default function Landing({ onlineCount, interests, setInterests, onStartC
                 />
                 <div className="preview-overlay">
                   <div className="preview-overlay-info">
-                    <Camera size={16} style={{ color: 'var(--secondary)' }} />
+                    <Camera size={16} />
                     <span>Webcam Preview</span>
                   </div>
                 </div>
               </>
+            ) : !cameraRequested ? (
+              <div className="no-video-placeholder">
+                <Camera size={48} className="text-muted" style={{ color: 'var(--indigo)' }} />
+                <h3>Enable Webcam Preview</h3>
+                <p>See how you look before matching with strangers.</p>
+                <button 
+                  className="glass-button" 
+                  onClick={startCamera}
+                  style={{ marginTop: '15px', backgroundColor: 'var(--yellow)' }}
+                >
+                  Enable Camera
+                </button>
+              </div>
             ) : (
               <div className="no-video-placeholder">
                 <div className="spinner"></div>
