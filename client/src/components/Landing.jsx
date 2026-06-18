@@ -64,6 +64,11 @@ export default function Landing({ onlineCount, interests, setInterests, onStartC
   return (
     <div className="landing-wrapper" style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
       <div className="landing-grid">
+        {/* Floating Badges */}
+        <div className="sticker sticker-yellow" style={{ top: '-35px', left: '8%', transform: 'rotate(-5deg)' }}>100% Free &amp; Secure</div>
+        <div className="sticker sticker-green" style={{ bottom: '-15px', left: '4%', transform: 'rotate(4deg)' }}>Talk to Strangers</div>
+        <div className="sticker sticker-indigo" style={{ top: '-20px', right: '35%', transform: 'rotate(-3deg)' }}>Made in Nepal 🇳🇵</div>
+        
         <div className="landing-left">
           <h1 className="landing-title">
             Talk to strangers,<br />
@@ -72,8 +77,8 @@ export default function Landing({ onlineCount, interests, setInterests, onStartC
           <p className="landing-subtitle">
             Meet new people from all around the world. Filter by your interests to match with like-minded individuals, or jump straight into a random text or video conversation!
           </p>
-
-          <div className="glass-panel landing-card">
+ 
+          <div className="landing-card">
             <div className="input-group">
               <label htmlFor="interests-input">Add your interests (optional)</label>
               <div className="interests-tag-box">
@@ -96,12 +101,12 @@ export default function Landing({ onlineCount, interests, setInterests, onStartC
                 />
               </div>
             </div>
-
+ 
             <div className="action-buttons">
               <button 
                 className="neon-button" 
                 onClick={() => onStartChat('text')}
-                style={{ background: 'linear-gradient(135deg, hsl(252, 90%, 65%) 0%, hsl(265, 80%, 60%) 100%)' }}
+                style={{ backgroundColor: 'var(--yellow)' }}
               >
                 <MessageSquare size={18} />
                 Text Chat
@@ -109,7 +114,7 @@ export default function Landing({ onlineCount, interests, setInterests, onStartC
               <button 
                 className="neon-button" 
                 onClick={() => onStartChat('video')}
-                style={{ background: 'linear-gradient(135deg, hsl(252, 90%, 65%) 0%, hsl(186, 95%, 48%) 100%)' }}
+                style={{ backgroundColor: 'var(--indigo)' }}
               >
                 <Video size={18} />
                 Video Chat
@@ -119,10 +124,10 @@ export default function Landing({ onlineCount, interests, setInterests, onStartC
         </div>
 
         <div className="landing-right">
-          <div className="glass-panel preview-container">
+          <div className="preview-container">
             {cameraError ? (
               <div className="no-video-placeholder">
-                <CameraOff size={48} className="text-muted" style={{ color: 'var(--error)' }} />
+                <CameraOff size={48} className="text-muted" style={{ color: 'var(--rose)' }} />
                 <h3>Webcam Disabled</h3>
                 <p>To use video chat, please allow microphone and camera access in your browser settings.</p>
               </div>

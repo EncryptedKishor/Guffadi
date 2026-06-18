@@ -421,7 +421,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
               </div>
             )}
             <div className="video-label">
-              <Sparkles size={14} style={{ color: 'var(--accent)' }} />
+              <Sparkles size={14} style={{ color: 'var(--indigo)' }} />
               <span>Stranger</span>
             </div>
           </div>
@@ -455,33 +455,33 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
             </div>
 
             <div className="video-label">
-              <div className="pulse-dot"></div>
+              <div className="pulse-dot" style={{ backgroundColor: 'var(--green)' }}></div>
               <span>You</span>
             </div>
           </div>
         </div>
       ) : (
         /* Text Mode Side Panel styling */
-        <div className="glass-panel text-side-card" style={{ display: 'flex', flexDirection: 'column', padding: '30px', justifyContent: 'center', height: '100%' }}>
+        <div className="text-side-card">
           <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-            <AlertCircle size={48} style={{ color: 'var(--primary)', margin: '0 auto 15px auto' }} />
-            <h2 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '10px' }}>Random Text Chat</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
+            <AlertCircle size={48} style={{ color: 'var(--yellow)', margin: '0 auto 15px auto' }} />
+            <h2>Random Text Chat</h2>
+            <p>
               You are connected via WebSockets. Conversations are completely private, peer-to-peer (signaling), and self-contained.
             </p>
           </div>
-          <button className="glass-button" onClick={onLeave} style={{ alignSelf: 'center' }}>
+          <button className="glass-button" onClick={onLeave}>
             <Home size={16} /> Go Home
           </button>
         </div>
       )}
 
       {/* Chat Section */}
-      <div className="glass-panel chat-section">
+      <div className="chat-section">
         <div className="chat-header">
           <span>Conversation Feed</span>
           <span className="chat-status">
-            Status: <strong style={{ color: status === 'matched' ? 'var(--success)' : 'var(--warning)' }}>{status}</strong>
+            Status: <strong style={{ color: status === 'matched' ? 'var(--green)' : 'var(--yellow)' }}>{status}</strong>
           </span>
         </div>
 

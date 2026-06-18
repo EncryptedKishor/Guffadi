@@ -78,11 +78,11 @@ export default function App() {
       {/* Premium Header */}
       <header className="app-header">
         <div className="logo" onClick={handleLeaveChat} style={{ cursor: 'pointer' }}>
-          <MessageCircle size={28} style={{ color: 'var(--primary)' }} />
+          <MessageCircle size={28} style={{ color: 'var(--text-dark)' }} />
           Guff<span>adi</span>
         </div>
         <div className="online-badge">
-          <div className="pulse-dot" style={{ backgroundColor: connected ? 'var(--success)' : 'var(--error)' }}></div>
+          <div className="pulse-dot" style={{ backgroundColor: connected ? 'var(--green)' : 'var(--rose)' }}></div>
           <span>
             {connected 
               ? `${onlineCount} Stranger${onlineCount === 1 ? '' : 's'} Online` 
