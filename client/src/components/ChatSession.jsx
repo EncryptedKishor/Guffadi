@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Mic, MicOff, Video, VideoOff, Home, AlertCircle, Sparkles, MessageSquare, X } from 'lucide-react';
+import { Send, Mic, MicOff, Video, VideoOff, Home, AlertCircle, Sparkles, MessageSquare, X, MessageCircle } from 'lucide-react';
 
 
 
@@ -430,6 +430,12 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
           onTouchStart={handleTouchStart} 
           onTouchEnd={handleTouchEnd}
         >
+          {/* Mobile brand logo overlay */}
+          <div className="mobile-logo-overlay" onClick={onLeave}>
+            <MessageCircle size={20} style={{ color: 'var(--text-dark)' }} />
+            <span>Guffadi</span>
+          </div>
+
           {/* Partner Video Panel */}
           <div className="video-card">
             {status === 'matched' ? (

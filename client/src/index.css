@@ -985,6 +985,9 @@ body:has(.in-chat) #root {
   height: 100% !important;
 }
 
+.mobile-logo-overlay {
+  display: none;
+}
 
 /* ==========================================================================
    Mobile & Tablet Responsive Layout Optimizations (max-width: 968px)
@@ -1098,14 +1101,35 @@ body:has(.in-video-chat) {
     height: 100% !important;
   }
 
-  /* Floating controls sidebar overlaying video card - POSITIONED ON THE LEFT SIDE */
+  /* Centered brand logo overlay at the top (mobile video chat only) */
+  .in-video-chat.app-container .mobile-logo-overlay {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    position: absolute !important;
+    top: 16px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: var(--yellow) !important;
+    border: var(--border-width) solid var(--border-color) !important;
+    box-shadow: var(--shadow-sm) !important;
+    padding: 6px 16px !important;
+    border-radius: 20px !important;
+    font-size: 0.95rem !important;
+    font-weight: 900 !important;
+    color: var(--text-dark) !important;
+    z-index: 95 !important;
+    cursor: pointer !important;
+  }
+
+  /* Floating controls sidebar overlaying video card - POSITIONED ON THE RIGHT SIDE */
   .in-video-chat.app-container .mobile-chat-controls {
     display: flex !important;
     flex-direction: column !important;
     gap: 16px !important;
     position: absolute !important;
-    left: 16px !important;
-    right: auto !important;
+    left: auto !important;
+    right: 16px !important;
     bottom: 24px !important;
     z-index: 90 !important;
   }
