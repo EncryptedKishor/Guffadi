@@ -1076,13 +1076,14 @@ body:has(.in-video-chat) {
     height: 100% !important;
   }
 
-  /* Floating controls sidebar overlaying video card */
+  /* Floating controls sidebar overlaying video card - POSITIONED ON THE LEFT SIDE */
   .in-video-chat .mobile-chat-controls {
     display: flex !important;
     flex-direction: column !important;
     gap: 16px !important;
     position: absolute !important;
-    right: 16px !important;
+    left: 16px !important;
+    right: auto !important;
     bottom: 24px !important;
     z-index: 90 !important;
   }
@@ -1149,12 +1150,12 @@ body:has(.in-video-chat) {
     box-shadow: 1px 1px 0 var(--border-color);
   }
 
-  /* Sliding Chat Drawer Overlay */
+  /* Sliding Chat Drawer Overlay - TRANSPARENT / GLASSMORPHISM */
   .in-video-chat .chat-section {
     position: absolute !important;
     top: 0 !important;
     right: 0 !important;
-    width: 85% !important;
+    width: 80% !important; /* Narrowed slightly so more video is visible on the left */
     height: 100% !important;
     z-index: 100 !important;
     border: none !important;
@@ -1163,10 +1164,37 @@ body:has(.in-video-chat) {
     box-shadow: -6px 0 0px 0px var(--border-color) !important;
     transform: translateX(105%) !important;
     transition: transform var(--transition-normal) !important;
+    /* Glassmorphism translucent styling */
+    background: rgba(253, 246, 238, 0.65) !important; /* Warm translucent cream */
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
   }
 
   .in-video-chat .chat-section.mobile-open {
     transform: translateX(0) !important;
+  }
+
+  .in-video-chat .chat-header {
+    background: rgba(232, 222, 255, 0.5) !important; /* Translucent lavender */
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    border-bottom: var(--border-width) solid var(--border-color) !important;
+  }
+
+  .in-video-chat .chat-messages {
+    background: transparent !important;
+    background-image: none !important;
+  }
+
+  .in-video-chat .chat-footer {
+    background: rgba(255, 255, 255, 0.5) !important; /* Translucent footer */
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    border-top: var(--border-width) solid var(--border-color) !important;
+  }
+
+  .in-video-chat .chat-input-container {
+    background: rgba(253, 246, 238, 0.8) !important;
   }
 
   .in-video-chat .chat-header .mobile-close-drawer {
