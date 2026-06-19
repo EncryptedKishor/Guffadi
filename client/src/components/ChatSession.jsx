@@ -35,6 +35,27 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const autoMatchTimeoutRef = useRef(null);
   const partnerIdRef = useRef(null);
   const iceCandidatesQueueRef = useRef([]);
+  const touchStartXRef = useRef(0);
+  const touchStartYRef = useRef(0);
+
+  const handleTouchStart = (e) => {
+    touchStartXRef.current = e.touches[0].clientX;
+    touchStartYRef.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartXRef.current || !touchStartYRef.current) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const diffX = touchStartXRef.current - touchEndX;
+    const diffY = touchStartYRef.current - touchEndY;
+    // Check if horizontal swipe is dominant and exceeds threshold (70px)
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 70) {
+      handleStopAction();
+    }
+    touchStartXRef.current = 0;
+    touchStartYRef.current = 0;
+  };
 
   // 1. Initial local video setup (if in video mode)
   useEffect(() => {
@@ -404,7 +425,11 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     <div className="chat-screen-layout">
       {/* Video Grid Section */}
       {mode === 'video' ? (
-        <div className="video-section">
+        <div 
+          className="video-section" 
+          onTouchStart={handleTouchStart} 
+          onTouchEnd={handleTouchEnd}
+        >
           {/* Partner Video Panel */}
           <div className="video-card">
             {status === 'matched' ? (
@@ -464,15 +489,6 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
           <div className="mobile-chat-controls">
             <button 
               type="button"
-              onClick={() => setIsMobileChatOpen(!isMobileChatOpen)} 
-              className={`mobile-control-btn chat-toggle-btn ${hasUnread ? 'has-unread' : ''}`}
-              aria-label="Toggle chat"
-            >
-              <MessageSquare size={20} />
-              {hasUnread && <span className="unread-dot"></span>}
-            </button>
-            <button 
-              type="button"
               onClick={handleStopAction} 
               className="mobile-control-btn skip-btn"
               aria-label="Skip match"
@@ -506,89 +522,91 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       )}
 
       {/* Chat Section */}
-      <div className={`chat-section ${isMobileChatOpen ? 'mobile-open' : ''}`}>
-        <div className="chat-header">
-          <span>Conversation Feed</span>
-          <span className="chat-status">
-            Status: <strong style={{ color: status === 'matched' ? 'var(--green)' : 'var(--yellow)' }}>{status}</strong>
-            <button 
-              type="button"
-              onClick={() => setIsMobileChatOpen(false)} 
-              className="mobile-close-drawer"
-              aria-label="Close Chat"
-            >
-              <X size={18} />
-            </button>
-          </span>
-        </div>
+      {mode !== 'video' && (
+        <div className={`chat-section ${isMobileChatOpen ? 'mobile-open' : ''}`}>
+          <div className="chat-header">
+            <span>Conversation Feed</span>
+            <span className="chat-status">
+              Status: <strong style={{ color: status === 'matched' ? 'var(--green)' : 'var(--yellow)' }}>{status}</strong>
+              <button 
+                type="button"
+                onClick={() => setIsMobileChatOpen(false)} 
+                className="mobile-close-drawer"
+                aria-label="Close Chat"
+              >
+                <X size={18} />
+              </button>
+            </span>
+          </div>
 
-        {/* Chat Feed */}
-        <div className="chat-messages">
-          {messages.map((msg) => (
-            <div key={msg.key} className={`message ${msg.sender}`}>
-              {msg.sender !== 'system' && (
-                <span className="message-label">
-                  {msg.sender === 'you' ? 'You' : 'Stranger'}
-                </span>
-              )}
-              {msg.sender === 'system' ? (
-                <div className="message-system-text" dangerouslySetInnerHTML={{ __html: msg.text }}></div>
-              ) : (
-                <div className="message-text">{msg.text}</div>
-              )}
-            </div>
-          ))}
-
-          {/* Typing Indicator */}
-          {isPartnerTyping && (
-            <div className="typing-indicator">
-              Stranger is typing
-              <div className="typing-dots">
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
+          {/* Chat Feed */}
+          <div className="chat-messages">
+            {messages.map((msg) => (
+              <div key={msg.key} className={`message ${msg.sender}`}>
+                {msg.sender !== 'system' && (
+                  <span className="message-label">
+                    {msg.sender === 'you' ? 'You' : 'Stranger'}
+                  </span>
+                )}
+                {msg.sender === 'system' ? (
+                  <div className="message-system-text" dangerouslySetInnerHTML={{ __html: msg.text }}></div>
+                ) : (
+                  <div className="message-text">{msg.text}</div>
+                )}
               </div>
-            </div>
-          )}
-          <div ref={chatEndRef} />
+            ))}
+
+            {/* Typing Indicator */}
+            {isPartnerTyping && (
+              <div className="typing-indicator">
+                Stranger is typing
+                <div className="typing-dots">
+                  <div className="typing-dot"></div>
+                  <div className="typing-dot"></div>
+                  <div className="typing-dot"></div>
+                </div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          {/* Footer Input Form */}
+          <div className="chat-footer">
+            <form onSubmit={handleSendMessage} className="chat-input-form">
+              <button
+                type="button"
+                onClick={handleStopAction}
+                className="stop-btn standard"
+              >
+                Skip
+              </button>
+
+              <div className="chat-input-container">
+                <input
+                  type="text"
+                  placeholder={
+                    status !== 'matched' 
+                      ? "Waiting for match..." 
+                      : "Type a message or press Esc to skip..."
+                  }
+                  value={inputText}
+                  onChange={handleInputChange}
+                  disabled={status !== 'matched'}
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                className="send-btn" 
+                disabled={status !== 'matched' || !inputText.trim()}
+                aria-label="Send message"
+              >
+                <Send size={18} />
+              </button>
+            </form>
+          </div>
         </div>
-
-        {/* Footer Input Form */}
-        <div className="chat-footer">
-          <form onSubmit={handleSendMessage} className="chat-input-form">
-            <button
-              type="button"
-              onClick={handleStopAction}
-              className="stop-btn standard"
-            >
-              Skip
-            </button>
-
-            <div className="chat-input-container">
-              <input
-                type="text"
-                placeholder={
-                  status !== 'matched' 
-                    ? "Waiting for match..." 
-                    : "Type a message or press Esc to skip..."
-                }
-                value={inputText}
-                onChange={handleInputChange}
-                disabled={status !== 'matched'}
-              />
-            </div>
-
-            <button 
-              type="submit" 
-              className="send-btn" 
-              disabled={status !== 'matched' || !inputText.trim()}
-              aria-label="Send message"
-            >
-              <Send size={18} />
-            </button>
-          </form>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
