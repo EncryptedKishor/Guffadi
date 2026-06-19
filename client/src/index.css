@@ -921,6 +921,50 @@ body {
 }
 
 /* ==========================================================================
+   Desktop / Laptop Chat Layout Enhancements (Lock Viewport, Prevent Sliding)
+   ========================================================================== */
+
+/* Lock the viewport when in chat mode on desktop/laptop */
+body:has(.in-chat) {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.in-chat.app-container {
+  height: 100vh !important;
+  height: 100dvh !important;
+  padding-bottom: 1rem !important;
+  overflow: hidden !important;
+}
+
+.in-chat .app-header {
+  padding: 0.8rem 0 !important;
+  margin-bottom: 1rem !important;
+  flex-shrink: 0 !important;
+}
+
+.in-chat .chat-screen-layout {
+  grid-template-columns: 1fr 1.35fr !important; /* Videos left, Chat right (wider, matching screenshot) */
+  gap: 1.5rem !important;
+  flex: 1 !important;
+  height: auto !important; /* Managed dynamically by flex container */
+  min-height: 0 !important;
+}
+
+.in-chat .video-section {
+  grid-template-rows: 1fr 1fr !important;
+  gap: 1rem !important;
+  min-height: 0 !important;
+}
+
+.in-chat .video-card {
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+/* ==========================================================================
    Mobile & Tablet Responsive Layout Optimizations (max-width: 968px)
    ========================================================================== */
 
