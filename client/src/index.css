@@ -1007,12 +1007,12 @@ body:has(.in-video-chat) {
   }
 
   /* Text Mode Chat: hide description side-card */
-  .chat-screen-layout .text-side-card {
+  .in-chat.app-container .chat-screen-layout .text-side-card {
     display: none !important;
   }
 
   /* Unified mobile height mapping for layout */
-  .chat-screen-layout {
+  .in-chat.app-container .chat-screen-layout {
     display: flex !important;
     flex-direction: column !important;
     flex: 1 !important;
@@ -1022,15 +1022,15 @@ body:has(.in-video-chat) {
     margin: 0 !important;
   }
 
-  .chat-screen-layout .chat-section {
+  .in-chat.app-container .chat-screen-layout .chat-section {
     flex: 1 !important;
     height: 100% !important;
     border-radius: 0 !important;
   }
 
   /* Active Video Chat Layout (OmeTV-Style) */
-  .in-video-chat .app-header,
-  .in-video-chat .app-footer {
+  .in-video-chat.app-container .app-header,
+  .in-video-chat.app-container .app-footer {
     display: none !important;
   }
 
@@ -1042,7 +1042,7 @@ body:has(.in-video-chat) {
     overflow: hidden !important;
   }
 
-  .in-video-chat .chat-screen-layout {
+  .in-video-chat.app-container .chat-screen-layout {
     display: flex !important;
     flex-direction: column !important;
     height: 100% !important;
@@ -1051,7 +1051,7 @@ body:has(.in-video-chat) {
     overflow: hidden !important;
   }
 
-  .in-video-chat .video-section {
+  .in-video-chat.app-container .video-section {
     display: flex !important;
     flex-direction: column !important;
     height: 100% !important;
@@ -1060,7 +1060,7 @@ body:has(.in-video-chat) {
     aspect-ratio: auto !important;
   }
 
-  .in-video-chat .video-card {
+  .in-video-chat.app-container .video-card {
     flex: 1 !important;
     height: 50% !important;
     width: 100% !important;
@@ -1070,18 +1070,18 @@ body:has(.in-video-chat) {
     position: relative !important;
   }
 
-  .in-video-chat .video-card:first-child {
+  .in-video-chat.app-container .video-card:first-child {
     border-bottom: 3px solid var(--border-color) !important;
   }
 
-  .in-video-chat .video-stream {
+  .in-video-chat.app-container .video-stream {
     object-fit: cover !important;
     width: 100% !important;
     height: 100% !important;
   }
 
   /* Floating controls sidebar overlaying video card - POSITIONED ON THE LEFT SIDE */
-  .in-video-chat .mobile-chat-controls {
+  .in-video-chat.app-container .mobile-chat-controls {
     display: flex !important;
     flex-direction: column !important;
     gap: 16px !important;
@@ -1092,7 +1092,7 @@ body:has(.in-video-chat) {
     z-index: 90 !important;
   }
 
-  .in-video-chat .mobile-control-btn {
+  .in-video-chat.app-container .mobile-control-btn {
     width: 48px;
     height: 48px;
     border-radius: 50%;
@@ -1109,22 +1109,22 @@ body:has(.in-video-chat) {
     outline: none;
   }
 
-  .in-video-chat .mobile-control-btn:active {
+  .in-video-chat.app-container .mobile-control-btn:active {
     transform: translate(2px, 2px);
     box-shadow: none !important;
   }
 
-  .in-video-chat .mobile-control-btn.chat-toggle-btn {
+  .in-video-chat.app-container .mobile-control-btn.chat-toggle-btn {
     background: var(--indigo) !important;
     color: var(--bg-white) !important;
   }
 
-  .in-video-chat .mobile-control-btn.exit-btn {
+  .in-video-chat.app-container .mobile-control-btn.exit-btn {
     background: var(--rose) !important;
     color: var(--text-dark) !important;
   }
 
-  .in-video-chat .mobile-control-btn.skip-btn {
+  .in-video-chat.app-container .mobile-control-btn.skip-btn {
     background: var(--yellow) !important;
     color: var(--text-dark) !important;
     font-weight: 900 !important;
@@ -1137,12 +1137,12 @@ body:has(.in-video-chat) {
     transform: rotate(-3deg);
   }
 
-  .in-video-chat .mobile-control-btn.skip-btn:active {
+  .in-video-chat.app-container .mobile-control-btn.skip-btn:active {
     transform: translate(2px, 2px) rotate(-3deg) !important;
     box-shadow: none !important;
   }
 
-  .in-video-chat .unread-dot {
+  .in-video-chat.app-container .unread-dot {
     position: absolute;
     top: -2px;
     right: -2px;
@@ -1155,7 +1155,7 @@ body:has(.in-video-chat) {
   }
 
   /* Sliding Chat Drawer Overlay - TRANSPARENT / GLASSMORPHISM */
-  .in-video-chat .chat-section {
+  .in-video-chat.app-container .chat-section {
     position: absolute !important;
     top: 0 !important;
     right: 0 !important;
@@ -1174,34 +1174,34 @@ body:has(.in-video-chat) {
     -webkit-backdrop-filter: blur(12px) !important;
   }
 
-  .in-video-chat .chat-section.mobile-open {
+  .in-video-chat.app-container .chat-section.mobile-open {
     transform: translateX(0) !important;
   }
 
-  .in-video-chat .chat-header {
+  .in-video-chat.app-container .chat-header {
     background: rgba(232, 222, 255, 0.5) !important; /* Translucent lavender */
     backdrop-filter: blur(4px) !important;
     -webkit-backdrop-filter: blur(4px) !important;
     border-bottom: var(--border-width) solid var(--border-color) !important;
   }
 
-  .in-video-chat .chat-messages {
+  .in-video-chat.app-container .chat-messages {
     background: transparent !important;
     background-image: none !important;
   }
 
-  .in-video-chat .chat-footer {
+  .in-video-chat.app-container .chat-footer {
     background: rgba(255, 255, 255, 0.5) !important; /* Translucent footer */
     backdrop-filter: blur(4px) !important;
     -webkit-backdrop-filter: blur(4px) !important;
     border-top: var(--border-width) solid var(--border-color) !important;
   }
 
-  .in-video-chat .chat-input-container {
+  .in-video-chat.app-container .chat-input-container {
     background: rgba(253, 246, 238, 0.8) !important;
   }
 
-  .in-video-chat .chat-header .mobile-close-drawer {
+  .in-video-chat.app-container .chat-header .mobile-close-drawer {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1214,7 +1214,7 @@ body:has(.in-video-chat) {
     color: var(--text-dark) !important;
   }
 
-  .in-video-chat .chat-status {
+  .in-video-chat.app-container .chat-status {
     display: flex !important;
     align-items: center !important;
     gap: 12px !important;
