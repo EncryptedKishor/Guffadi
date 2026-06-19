@@ -919,3 +919,195 @@ body {
 .app-footer span {
   color: var(--rose);
 }
+
+/* ==========================================================================
+   OmeTV Mobile Video Chat Layout Redesign
+   ========================================================================== */
+
+/* Hide mobile controls by default on desktop */
+.mobile-chat-controls {
+  display: none;
+}
+
+/* Hide close drawer button by default on desktop */
+.chat-header .mobile-close-drawer {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Hide global header & footer in active video chat on mobile */
+  .in-video-chat .app-header,
+  .in-video-chat .app-footer {
+    display: none !important;
+  }
+
+  /* Reset app container padding and size for edge-to-edge layout */
+  .in-video-chat.app-container {
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  /* Force full viewport height layout for the chat screen */
+  .in-video-chat .chat-screen-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    gap: 0 !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  /* Stack video panels vertically taking up 100% height (50/50) */
+  .in-video-chat .video-section {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    width: 100% !important;
+    gap: 0 !important;
+    aspect-ratio: auto !important;
+  }
+
+  .in-video-chat .video-card {
+    flex: 1 !important;
+    height: 50% !important;
+    width: 100% !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    position: relative !important;
+  }
+
+  /* Middle separator line */
+  .in-video-chat .video-card:first-child {
+    border-bottom: 3px solid var(--border-color) !important;
+  }
+
+  .in-video-chat .video-stream {
+    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Overlay sidebar for mobile control buttons */
+  .in-video-chat .mobile-chat-controls {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    position: absolute !important;
+    right: 16px !important;
+    bottom: 24px !important;
+    z-index: 90 !important;
+  }
+
+  .in-video-chat .mobile-control-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: var(--border-width) solid var(--border-color);
+    background: var(--bg-white);
+    color: var(--text-dark);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    position: relative;
+    outline: none;
+  }
+
+  .in-video-chat .mobile-control-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: none !important;
+  }
+
+  /* Chat toggle button background */
+  .in-video-chat .mobile-control-btn.chat-toggle-btn {
+    background: var(--indigo) !important;
+    color: var(--bg-white) !important;
+  }
+
+  /* Exit home button background */
+  .in-video-chat .mobile-control-btn.exit-btn {
+    background: var(--rose) !important;
+    color: var(--text-dark) !important;
+  }
+
+  /* High priority premium yellow Skip button */
+  .in-video-chat .mobile-control-btn.skip-btn {
+    background: var(--yellow) !important;
+    color: var(--text-dark) !important;
+    font-weight: 900 !important;
+    font-size: 0.85rem !important;
+    text-transform: uppercase !important;
+    border-radius: 12px !important;
+    width: 56px !important;
+    height: 56px !important;
+    box-shadow: var(--shadow-main) !important;
+    transform: rotate(-3deg);
+  }
+
+  .in-video-chat .mobile-control-btn.skip-btn:active {
+    transform: translate(2px, 2px) rotate(-3deg) !important;
+    box-shadow: none !important;
+  }
+
+  /* Unread messages notification dot */
+  .in-video-chat .unread-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: var(--rose);
+    border: var(--border-width-sm) solid var(--border-color);
+    box-shadow: 1px 1px 0 var(--border-color);
+  }
+
+  /* Sliding Chat Drawer Overlay */
+  .in-video-chat .chat-section {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    width: 85% !important;
+    height: 100% !important;
+    z-index: 100 !important;
+    border: none !important;
+    border-left: var(--border-width) solid var(--border-color) !important;
+    border-radius: 0 !important;
+    box-shadow: -6px 0 0px 0px var(--border-color) !important;
+    transform: translateX(105%) !important;
+    transition: transform var(--transition-normal) !important;
+  }
+
+  .in-video-chat .chat-section.mobile-open {
+    transform: translateX(0) !important;
+  }
+
+  /* Close drawer button inside chat header */
+  .in-video-chat .chat-header .mobile-close-drawer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: var(--bg-white) !important;
+    border: var(--border-width-sm) solid var(--border-color) !important;
+    border-radius: 4px !important;
+    width: 28px !important;
+    height: 28px !important;
+    cursor: pointer !important;
+    color: var(--text-dark) !important;
+  }
+
+  .in-video-chat .chat-status {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+}

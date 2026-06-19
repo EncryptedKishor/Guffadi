@@ -74,7 +74,7 @@ export default function App() {
   };
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${view === 'chat' && mode === 'video' ? 'in-video-chat' : ''}`}>
       {/* Premium Header */}
       <header className="app-header">
         <div className="logo" onClick={handleLeaveChat} style={{ cursor: 'pointer' }}>

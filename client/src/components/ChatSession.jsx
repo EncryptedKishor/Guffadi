@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Mic, MicOff, Video, VideoOff, Home, AlertCircle, Sparkles } from 'lucide-react';
+import { Send, Mic, MicOff, Video, VideoOff, Home, AlertCircle, Sparkles, MessageSquare, X } from 'lucide-react';
 
 
 
@@ -10,9 +10,19 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
   const [micMuted, setMicMuted] = useState(false);
   const [videoDisabled, setVideoDisabled] = useState(false);
-  const [stopButtonState, setStopButtonState] = useState('standard'); // 'standard' | 'confirm' | 'new'
+  const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
   const [localStreamReady, setLocalStreamReady] = useState(mode !== 'video');
   const [remoteStream, setRemoteStream] = useState(null);
+
+  const isMobileChatOpenRef = useRef(false);
+
+  useEffect(() => {
+    isMobileChatOpenRef.current = isMobileChatOpen;
+    if (isMobileChatOpen) {
+      setHasUnread(false);
+    }
+  }, [isMobileChatOpen]);
 
 
   const localVideoRef = useRef(null);
@@ -22,7 +32,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const chatEndRef = useRef(null);
   const isTypingRef = useRef(false);
   const typingTimeoutRef = useRef(null);
-  const confirmTimeoutRef = useRef(null);
+  const autoMatchTimeoutRef = useRef(null);
   const partnerIdRef = useRef(null);
   const iceCandidatesQueueRef = useRef([]);
 
@@ -79,7 +89,6 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     // Reset components states
     setMessages([{ key: 'system-init', sender: 'system', text: 'Connecting to server...' }]);
     setStatus('connecting');
-    setStopButtonState('standard');
 
     socket.emit('join-queue', { mode, interests });
 
@@ -97,7 +106,6 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     socket.on('matched', async ({ roomId, partnerId, initiator, commonInterests }) => {
       setStatus('matched');
       setIsPartnerTyping(false);
-      setStopButtonState('standard');
       partnerIdRef.current = partnerId;
 
       const introMessages = [
@@ -122,6 +130,9 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     socket.on('message', (msg) => {
       setIsPartnerTyping(false);
       setMessages(prev => [...prev, { ...msg, key: `msg-${Date.now()}-${Math.random()}` }]);
+      if (!isMobileChatOpenRef.current) {
+        setHasUnread(true);
+      }
     });
 
     socket.on('typing', ({ isTyping }) => {
@@ -129,14 +140,21 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     });
 
     socket.on('partner-disconnected', () => {
-      setStatus('disconnected');
       setIsPartnerTyping(false);
-      setStopButtonState('new');
       closePeerConnection();
       setMessages(prev => [
         ...prev,
-        { key: `disc-${Date.now()}`, sender: 'system', text: 'Stranger has disconnected.' }
+        { key: `disc-${Date.now()}`, sender: 'system', text: 'Stranger disconnected. Finding a new match...' }
       ]);
+      
+      // Auto-rejoin queue after 1 second
+      if (autoMatchTimeoutRef.current) clearTimeout(autoMatchTimeoutRef.current);
+      autoMatchTimeoutRef.current = setTimeout(() => {
+        if (socket) {
+          setStatus('connecting');
+          socket.emit('join-queue', { mode, interests });
+        }
+      }, 1000);
     });
 
     // Handle WebSocket signaling messages
@@ -184,6 +202,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     });
 
     return () => {
+      if (autoMatchTimeoutRef.current) clearTimeout(autoMatchTimeoutRef.current);
       socket.off('waiting');
       socket.off('matched');
       socket.off('message');
@@ -214,7 +233,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [stopButtonState, status]);
+  }, [status, socket]);
 
   // WebRTC Connection Setup Function
   const setupPeerConnection = async (isInitiator) => {
@@ -342,39 +361,20 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     socket.emit('typing', { isTyping: false });
   };
 
-  // Multi-state Stop Button Handler
+  // Instant Skip/Stop Reconnection Handler
   const handleStopAction = () => {
-    if (stopButtonState === 'standard') {
-      // Prompt for confirmation
-      setStopButtonState('confirm');
-      
-      // Auto cancel confirmation after 3 seconds
-      if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
-      confirmTimeoutRef.current = setTimeout(() => {
-        setStopButtonState('standard');
-      }, 3000);
-    } else if (stopButtonState === 'confirm') {
-      // User confirmed disconnect
-      if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
-      if (socket) {
-        socket.emit('disconnect-chat');
-      }
-      setStatus('disconnected');
-      setIsPartnerTyping(false);
-      setStopButtonState('new');
-      closePeerConnection();
-      setMessages(prev => [
-        ...prev,
-        { key: `disc-${Date.now()}`, sender: 'system', text: 'You disconnected.' }
-      ]);
-    } else if (stopButtonState === 'new') {
-      // Find a new match
-      if (socket) {
-        setMessages([{ key: 'system-reinit', sender: 'system', text: 'Connecting to server...' }]);
-        setStatus('connecting');
-        setStopButtonState('standard');
-        socket.emit('join-queue', { mode, interests });
-      }
+    if (autoMatchTimeoutRef.current) clearTimeout(autoMatchTimeoutRef.current);
+    if (socket) {
+      socket.emit('disconnect-chat');
+    }
+    closePeerConnection();
+    setIsPartnerTyping(false);
+    
+    // Instantly start matching again
+    if (socket) {
+      setMessages([{ key: 'system-reinit', sender: 'system', text: 'Connecting to server...' }]);
+      setStatus('connecting');
+      socket.emit('join-queue', { mode, interests });
     }
   };
 
@@ -459,6 +459,35 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
               <span>You</span>
             </div>
           </div>
+          
+          {/* Mobile Overlay Sidebar & Controls */}
+          <div className="mobile-chat-controls">
+            <button 
+              type="button"
+              onClick={() => setIsMobileChatOpen(!isMobileChatOpen)} 
+              className={`mobile-control-btn chat-toggle-btn ${hasUnread ? 'has-unread' : ''}`}
+              aria-label="Toggle chat"
+            >
+              <MessageSquare size={20} />
+              {hasUnread && <span className="unread-dot"></span>}
+            </button>
+            <button 
+              type="button"
+              onClick={handleStopAction} 
+              className="mobile-control-btn skip-btn"
+              aria-label="Skip match"
+            >
+              Skip
+            </button>
+            <button 
+              type="button"
+              onClick={onLeave} 
+              className="mobile-control-btn exit-btn"
+              aria-label="Exit chat"
+            >
+              <Home size={20} />
+            </button>
+          </div>
         </div>
       ) : (
         /* Text Mode Side Panel styling */
@@ -477,11 +506,19 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       )}
 
       {/* Chat Section */}
-      <div className="chat-section">
+      <div className={`chat-section ${isMobileChatOpen ? 'mobile-open' : ''}`}>
         <div className="chat-header">
           <span>Conversation Feed</span>
           <span className="chat-status">
             Status: <strong style={{ color: status === 'matched' ? 'var(--green)' : 'var(--yellow)' }}>{status}</strong>
+            <button 
+              type="button"
+              onClick={() => setIsMobileChatOpen(false)} 
+              className="mobile-close-drawer"
+              aria-label="Close Chat"
+            >
+              <X size={18} />
+            </button>
           </span>
         </div>
 
@@ -522,19 +559,9 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
             <button
               type="button"
               onClick={handleStopAction}
-              className={`stop-btn ${
-                stopButtonState === 'confirm' 
-                  ? 'confirm' 
-                  : stopButtonState === 'new' 
-                  ? 'new-match' 
-                  : 'standard'
-              }`}
+              className="stop-btn standard"
             >
-              {stopButtonState === 'confirm' 
-                ? 'Really?' 
-                : stopButtonState === 'new' 
-                ? 'New Match' 
-                : 'Stop'}
+              Skip
             </button>
 
             <div className="chat-input-container">
