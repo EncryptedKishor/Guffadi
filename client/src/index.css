@@ -1145,9 +1145,17 @@ body:has(.in-video-chat) {
     color: var(--bg-white) !important;
   }
 
-  .in-video-chat.app-container .mobile-control-btn.exit-btn {
-    background: var(--rose) !important;
-    color: var(--text-dark) !important;
+  .in-video-chat.app-container .mobile-control-btn.chat-disabled-btn {
+    opacity: 0.65 !important;
+    background: var(--bg-cream) !important;
+    color: var(--text-muted) !important;
+    border-style: dashed !important;
+    cursor: not-allowed !important;
+    box-shadow: none !important;
+  }
+
+  .in-video-chat.app-container .mobile-control-btn.chat-disabled-btn:active {
+    transform: none !important;
   }
 
   .in-video-chat.app-container .mobile-control-btn.skip-btn {

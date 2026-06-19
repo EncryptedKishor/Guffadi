@@ -503,11 +503,11 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
             </button>
             <button 
               type="button"
-              onClick={onLeave} 
-              className="mobile-control-btn exit-btn"
-              aria-label="Exit chat"
+              className="mobile-control-btn chat-disabled-btn"
+              disabled
+              aria-label="Chat disabled on mobile/tablet"
             >
-              <Home size={20} />
+              <MessageSquare size={20} />
             </button>
           </div>
         </div>
