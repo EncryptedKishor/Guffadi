@@ -969,22 +969,6 @@ body:has(.in-chat) #root {
   min-height: 0 !important;
 }
 
-/* Full-screen side-by-side video chat layout on desktop/laptop (no text chat) */
-.in-chat.in-video-chat .chat-screen-layout {
-  grid-template-columns: 1fr !important;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.in-chat.in-video-chat .video-section {
-  grid-template-columns: 1fr 1fr !important;
-  grid-template-rows: 1fr !important;
-  gap: 1.5rem !important;
-  min-height: 0 !important;
-  height: 100% !important;
-}
-
 .mobile-logo-overlay {
   display: none;
 }
@@ -1196,70 +1180,9 @@ body:has(.in-video-chat) {
     box-shadow: 1px 1px 0 var(--border-color);
   }
 
-  /* Sliding Chat Drawer Overlay - TRANSPARENT / GLASSMORPHISM */
+  /* Hide Chat Section in video mode on mobile/tablet */
   .in-video-chat.app-container .chat-section {
-    position: absolute !important;
-    top: 0 !important;
-    right: 0 !important;
-    width: 80% !important; /* Narrowed slightly so more video is visible on the left */
-    height: 100% !important;
-    z-index: 100 !important;
-    border: none !important;
-    border-left: var(--border-width) solid var(--border-color) !important;
-    border-radius: 0 !important;
-    box-shadow: -6px 0 0px 0px var(--border-color) !important;
-    transform: translateX(105%) !important;
-    transition: transform var(--transition-normal) !important;
-    /* Glassmorphism translucent styling */
-    background: rgba(253, 246, 238, 0.65) !important; /* Warm translucent cream */
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-  }
-
-  .in-video-chat.app-container .chat-section.mobile-open {
-    transform: translateX(0) !important;
-  }
-
-  .in-video-chat.app-container .chat-header {
-    background: rgba(232, 222, 255, 0.5) !important; /* Translucent lavender */
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
-    border-bottom: var(--border-width) solid var(--border-color) !important;
-  }
-
-  .in-video-chat.app-container .chat-messages {
-    background: transparent !important;
-    background-image: none !important;
-  }
-
-  .in-video-chat.app-container .chat-footer {
-    background: rgba(255, 255, 255, 0.5) !important; /* Translucent footer */
-    backdrop-filter: blur(4px) !important;
-    -webkit-backdrop-filter: blur(4px) !important;
-    border-top: var(--border-width) solid var(--border-color) !important;
-  }
-
-  .in-video-chat.app-container .chat-input-container {
-    background: rgba(253, 246, 238, 0.8) !important;
-  }
-
-  .in-video-chat.app-container .chat-header .mobile-close-drawer {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    background: var(--bg-white) !important;
-    border: var(--border-width-sm) solid var(--border-color) !important;
-    border-radius: 4px !important;
-    width: 28px !important;
-    height: 28px !important;
-    cursor: pointer !important;
-    color: var(--text-dark) !important;
-  }
-
-  .in-video-chat.app-container .chat-status {
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
+    display: none !important;
   }
 }
 

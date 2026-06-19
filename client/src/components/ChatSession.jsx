@@ -528,91 +528,89 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       )}
 
       {/* Chat Section */}
-      {mode !== 'video' && (
-        <div className={`chat-section ${isMobileChatOpen ? 'mobile-open' : ''}`}>
-          <div className="chat-header">
-            <span>Conversation Feed</span>
-            <span className="chat-status">
-              Status: <strong style={{ color: status === 'matched' ? 'var(--green)' : 'var(--yellow)' }}>{status}</strong>
-              <button 
-                type="button"
-                onClick={() => setIsMobileChatOpen(false)} 
-                className="mobile-close-drawer"
-                aria-label="Close Chat"
-              >
-                <X size={18} />
-              </button>
-            </span>
-          </div>
-
-          {/* Chat Feed */}
-          <div className="chat-messages">
-            {messages.map((msg) => (
-              <div key={msg.key} className={`message ${msg.sender}`}>
-                {msg.sender !== 'system' && (
-                  <span className="message-label">
-                    {msg.sender === 'you' ? 'You' : 'Stranger'}
-                  </span>
-                )}
-                {msg.sender === 'system' ? (
-                  <div className="message-system-text" dangerouslySetInnerHTML={{ __html: msg.text }}></div>
-                ) : (
-                  <div className="message-text">{msg.text}</div>
-                )}
-              </div>
-            ))}
-
-            {/* Typing Indicator */}
-            {isPartnerTyping && (
-              <div className="typing-indicator">
-                Stranger is typing
-                <div className="typing-dots">
-                  <div className="typing-dot"></div>
-                  <div className="typing-dot"></div>
-                  <div className="typing-dot"></div>
-                </div>
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
-
-          {/* Footer Input Form */}
-          <div className="chat-footer">
-            <form onSubmit={handleSendMessage} className="chat-input-form">
-              <button
-                type="button"
-                onClick={handleStopAction}
-                className="stop-btn standard"
-              >
-                Skip
-              </button>
-
-              <div className="chat-input-container">
-                <input
-                  type="text"
-                  placeholder={
-                    status !== 'matched' 
-                      ? "Waiting for match..." 
-                      : "Type a message or press Esc to skip..."
-                  }
-                  value={inputText}
-                  onChange={handleInputChange}
-                  disabled={status !== 'matched'}
-                />
-              </div>
-
-              <button 
-                type="submit" 
-                className="send-btn" 
-                disabled={status !== 'matched' || !inputText.trim()}
-                aria-label="Send message"
-              >
-                <Send size={18} />
-              </button>
-            </form>
-          </div>
+      <div className={`chat-section ${isMobileChatOpen ? 'mobile-open' : ''}`}>
+        <div className="chat-header">
+          <span>Conversation Feed</span>
+          <span className="chat-status">
+            Status: <strong style={{ color: status === 'matched' ? 'var(--green)' : 'var(--yellow)' }}>{status}</strong>
+            <button 
+              type="button"
+              onClick={() => setIsMobileChatOpen(false)} 
+              className="mobile-close-drawer"
+              aria-label="Close Chat"
+            >
+              <X size={18} />
+            </button>
+          </span>
         </div>
-      )}
+
+        {/* Chat Feed */}
+        <div className="chat-messages">
+          {messages.map((msg) => (
+            <div key={msg.key} className={`message ${msg.sender}`}>
+              {msg.sender !== 'system' && (
+                <span className="message-label">
+                  {msg.sender === 'you' ? 'You' : 'Stranger'}
+                </span>
+              )}
+              {msg.sender === 'system' ? (
+                <div className="message-system-text" dangerouslySetInnerHTML={{ __html: msg.text }}></div>
+              ) : (
+                <div className="message-text">{msg.text}</div>
+              )}
+            </div>
+          ))}
+
+          {/* Typing Indicator */}
+          {isPartnerTyping && (
+            <div className="typing-indicator">
+              Stranger is typing
+              <div className="typing-dots">
+                <div className="typing-dot"></div>
+                <div className="typing-dot"></div>
+                <div className="typing-dot"></div>
+              </div>
+            </div>
+          )}
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* Footer Input Form */}
+        <div className="chat-footer">
+          <form onSubmit={handleSendMessage} className="chat-input-form">
+            <button
+              type="button"
+              onClick={handleStopAction}
+              className="stop-btn standard"
+            >
+              Skip
+            </button>
+
+            <div className="chat-input-container">
+              <input
+                type="text"
+                placeholder={
+                  status !== 'matched' 
+                    ? "Waiting for match..." 
+                    : "Type a message or press Esc to skip..."
+                }
+                value={inputText}
+                onChange={handleInputChange}
+                disabled={status !== 'matched'}
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              className="send-btn" 
+              disabled={status !== 'matched' || !inputText.trim()}
+              aria-label="Send message"
+            >
+              <Send size={18} />
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
