@@ -921,7 +921,7 @@ body {
 }
 
 /* ==========================================================================
-   OmeTV Mobile Video Chat Layout Redesign
+   Mobile & Tablet Responsive Layout Optimizations (max-width: 968px)
    ========================================================================== */
 
 /* Hide mobile controls by default on desktop */
@@ -934,14 +934,55 @@ body {
   display: none;
 }
 
-@media (max-width: 768px) {
-  /* Hide global header & footer in active video chat on mobile */
+/* Scroll lock when in active video chat on any viewport size */
+body:has(.in-video-chat) {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+@media (max-width: 968px) {
+  /* Landing page grid: stack camera preview above text content */
+  .landing-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2rem !important;
+  }
+  .landing-left {
+    order: 2 !important;
+  }
+  .landing-right {
+    order: 1 !important;
+    width: 100% !important;
+  }
+
+  /* Text Mode Chat: hide description side-card and lock chat height */
+  .chat-screen-layout .text-side-card {
+    display: none !important;
+  }
+
+  .chat-screen-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    height: calc(100vh - 120px) !important;
+    height: calc(100dvh - 120px) !important;
+    gap: 0 !important;
+    margin: 0 !important;
+  }
+
+  .chat-screen-layout .chat-section {
+    flex: 1 !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+  }
+
+  /* Active Video Chat Layout (OmeTV-Style) */
   .in-video-chat .app-header,
   .in-video-chat .app-footer {
     display: none !important;
   }
 
-  /* Reset app container padding and size for edge-to-edge layout */
   .in-video-chat.app-container {
     padding: 0 !important;
     max-width: 100% !important;
@@ -952,7 +993,6 @@ body {
     overflow: hidden !important;
   }
 
-  /* Force full viewport height layout for the chat screen */
   .in-video-chat .chat-screen-layout {
     display: flex !important;
     flex-direction: column !important;
@@ -963,7 +1003,6 @@ body {
     overflow: hidden !important;
   }
 
-  /* Stack video panels vertically taking up 100% height (50/50) */
   .in-video-chat .video-section {
     display: flex !important;
     flex-direction: column !important;
@@ -983,7 +1022,6 @@ body {
     position: relative !important;
   }
 
-  /* Middle separator line */
   .in-video-chat .video-card:first-child {
     border-bottom: 3px solid var(--border-color) !important;
   }
@@ -994,7 +1032,7 @@ body {
     height: 100% !important;
   }
 
-  /* Overlay sidebar for mobile control buttons */
+  /* Floating controls sidebar overlaying video card */
   .in-video-chat .mobile-chat-controls {
     display: flex !important;
     flex-direction: column !important;
@@ -1027,19 +1065,16 @@ body {
     box-shadow: none !important;
   }
 
-  /* Chat toggle button background */
   .in-video-chat .mobile-control-btn.chat-toggle-btn {
     background: var(--indigo) !important;
     color: var(--bg-white) !important;
   }
 
-  /* Exit home button background */
   .in-video-chat .mobile-control-btn.exit-btn {
     background: var(--rose) !important;
     color: var(--text-dark) !important;
   }
 
-  /* High priority premium yellow Skip button */
   .in-video-chat .mobile-control-btn.skip-btn {
     background: var(--yellow) !important;
     color: var(--text-dark) !important;
@@ -1058,7 +1093,6 @@ body {
     box-shadow: none !important;
   }
 
-  /* Unread messages notification dot */
   .in-video-chat .unread-dot {
     position: absolute;
     top: -2px;
@@ -1091,7 +1125,6 @@ body {
     transform: translateX(0) !important;
   }
 
-  /* Close drawer button inside chat header */
   .in-video-chat .chat-header .mobile-close-drawer {
     display: flex !important;
     align-items: center !important;
@@ -1109,5 +1142,26 @@ body {
     display: flex !important;
     align-items: center !important;
     gap: 12px !important;
+  }
+}
+
+/* Small screens header formatting to prevent text clipping */
+@media (max-width: 480px) {
+  .app-header {
+    flex-direction: column !important;
+    gap: 16px !important;
+    margin-bottom: 1.5rem !important;
+    padding: 1rem 0 !important;
+    align-items: stretch !important;
+  }
+  .logo {
+    align-self: center !important;
+    transform: none !important;
+  }
+  .online-badge {
+    align-self: center !important;
+    transform: none !important;
+    width: 100% !important;
+    justify-content: center !important;
   }
 }
