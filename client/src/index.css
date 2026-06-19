@@ -129,11 +129,10 @@ body {
 }
 
 .logo span {
-  color: var(--bg-white);
-  background: var(--bg-dark);
-  padding: 0.1rem 0.4rem;
-  border-radius: 2px;
-  margin-left: 2px;
+  color: inherit;
+  background: none;
+  padding: 0;
+  margin-left: 0;
 }
 
 .online-badge {
