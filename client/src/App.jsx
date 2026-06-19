@@ -79,7 +79,7 @@ export default function App() {
       <header className="app-header">
         <div className="logo" onClick={handleLeaveChat} style={{ cursor: 'pointer' }}>
           <MessageCircle size={28} style={{ color: 'var(--text-dark)' }} />
-          Guff<span>adi</span>
+          Guffadi
         </div>
         <div className="online-badge">
           <div className="pulse-dot" style={{ backgroundColor: connected ? 'var(--green)' : 'var(--rose)' }}></div>
