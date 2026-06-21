@@ -1066,8 +1066,6 @@ body:has(.in-video-chat) {
   }
 
   .in-video-chat.app-container .video-card {
-    flex: 1 !important;
-    height: 50% !important;
     width: 100% !important;
     border: none !important;
     border-radius: 0 !important;
@@ -1076,7 +1074,18 @@ body:has(.in-video-chat) {
   }
 
   .in-video-chat.app-container .video-card:first-child {
+    height: 44% !important;
+    flex: none !important;
     border-bottom: 3px solid var(--border-color) !important;
+  }
+
+  .in-video-chat.app-container .video-card:last-child {
+    height: 56% !important;
+    flex: none !important;
+  }
+
+  .in-video-chat.app-container .video-card:last-child .video-label {
+    bottom: 70px !important;
   }
 
   .in-video-chat.app-container .video-stream {
@@ -1114,7 +1123,7 @@ body:has(.in-video-chat) {
     position: absolute !important;
     left: auto !important;
     right: 16px !important;
-    bottom: 24px !important;
+    bottom: 76px !important;
     z-index: 90 !important;
   }
 
