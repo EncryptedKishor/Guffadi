@@ -2,9 +2,52 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send, Mic, MicOff, Video, VideoOff, Home, AlertCircle, Sparkles, MessageSquare, X, MessageCircle } from 'lucide-react';
 import RetroTv from './RetroTv';
 
+const aiPersonas = [
+  {
+    name: 'Emily',
+    age: 21,
+    location: 'New York, USA',
+    interests: ['music', 'travel', 'books', 'coffee'],
+    videoUrl: '/videos/girl_intel.mp4'
+  },
+  {
+    name: 'Sofia',
+    age: 22,
+    location: 'Barcelona, Spain',
+    interests: ['surf', 'photo', 'beach', 'hiking'],
+    videoUrl: '/videos/face_1.mp4'
+  },
+  {
+    name: 'Priya',
+    age: 20,
+    location: 'Kathmandu, Nepal',
+    interests: ['coding', 'art', 'anime', 'momos'],
+    videoUrl: '/videos/face_2.mp4'
+  },
+  {
+    name: 'Jessica',
+    age: 23,
+    location: 'London, UK',
+    interests: ['gaming', 'design', 'tea', 'music'],
+    videoUrl: '/videos/face_3.mp4'
+  },
+  {
+    name: 'Chloe',
+    age: 19,
+    location: 'Toronto, Canada',
+    interests: ['movies', 'fitness', 'dance', 'cats'],
+    videoUrl: '/videos/face_4.mp4'
+  },
+  {
+    name: 'Maya',
+    age: 21,
+    location: 'Delhi, India',
+    interests: ['food', 'shopping', 'movies', 'dance'],
+    videoUrl: '/videos/face_5.mp4'
+  }
+];
 
-
-export default function ChatSession({ socket, mode, interests, onLeave }) {
+export default function ChatSession({ socket, mode, interests, onLeave, matchPool }) {
   const [status, setStatus] = useState('connecting'); // 'connecting' | 'waiting' | 'matched' | 'disconnected'
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -15,8 +58,13 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const [hasUnread, setHasUnread] = useState(false);
   const [localStreamReady, setLocalStreamReady] = useState(mode !== 'video');
   const [remoteStream, setRemoteStream] = useState(null);
+  const [currentPersona, setCurrentPersona] = useState(null);
 
   const isMobileChatOpenRef = useRef(false);
+  const aiPersonaRef = useRef(null);
+  const chatStepRef = useRef(0);
+  const aiResponseTimeoutRef = useRef(null);
+  const aiMatchTimeoutRef = useRef(null);
 
   useEffect(() => {
     isMobileChatOpenRef.current = isMobileChatOpen;
@@ -103,8 +151,188 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     };
   }, [mode]);
 
+  // Helper for simulated AI matchmaking
+  const startAiMatchSession = () => {
+    if (aiMatchTimeoutRef.current) clearTimeout(aiMatchTimeoutRef.current);
+    if (aiResponseTimeoutRef.current) clearTimeout(aiResponseTimeoutRef.current);
+    setIsPartnerTyping(false);
+    setCurrentPersona(null);
+    aiPersonaRef.current = null;
+    chatStepRef.current = 0;
+
+    setStatus('connecting');
+    setMessages([{ key: 'system-init', sender: 'system', text: 'Connecting to server...' }]);
+
+    // Step 1: waiting after 800ms
+    aiMatchTimeoutRef.current = setTimeout(() => {
+      setStatus('waiting');
+      setMessages([
+        { key: 'waiting-1', sender: 'system', text: 'Looking for a stranger...' },
+        interests.length > 0
+          ? { key: 'waiting-2', sender: 'system', text: `Searching for matches with interests: ${interests.join(', ')}` }
+          : { key: 'waiting-2', sender: 'system', text: 'Matching randomly...' }
+      ]);
+
+      // Step 2: matched after 1.2 to 2.2 seconds
+      aiMatchTimeoutRef.current = setTimeout(() => {
+        let selectedPersona = null;
+        if (interests.length > 0) {
+          const matching = aiPersonas.filter(p => 
+            p.interests.some(i => interests.map(ui => ui.toLowerCase()).includes(i.toLowerCase()))
+          );
+          if (matching.length > 0) {
+            selectedPersona = matching[Math.floor(Math.random() * matching.length)];
+          }
+        }
+        
+        if (!selectedPersona) {
+          selectedPersona = aiPersonas[Math.floor(Math.random() * aiPersonas.length)];
+        }
+
+        setCurrentPersona(selectedPersona);
+        aiPersonaRef.current = selectedPersona;
+        setStatus('matched');
+
+        const introMessages = [
+          { key: 'match-1', sender: 'system', text: 'You are now chatting with a random stranger!' }
+        ];
+
+        const common = selectedPersona.interests.filter(i => 
+          interests.map(ui => ui.toLowerCase()).includes(i.toLowerCase())
+        );
+
+        if (common.length > 0) {
+          introMessages.push({
+            key: 'match-2',
+            sender: 'system',
+            text: `🎉 You both like: ${common.join(', ')}`
+          });
+        }
+        setMessages(introMessages);
+
+        // Step 3: Greeting after 1.5s
+        setIsPartnerTyping(true);
+        aiResponseTimeoutRef.current = setTimeout(() => {
+          setIsPartnerTyping(false);
+          
+          const greetings = ["hey!", "hi", "hey there", "hi u"];
+          const selectedGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+
+          setMessages(prev => [
+            ...prev,
+            {
+              key: `msg-ai-greet`,
+              sender: 'stranger',
+              text: selectedGreeting,
+              timestamp: Date.now()
+            }
+          ]);
+        }, 1200);
+
+      }, 1200 + Math.random() * 1000);
+
+    }, 800);
+  };
+
+  const triggerAiResponse = (userMsg) => {
+    if (aiResponseTimeoutRef.current) clearTimeout(aiResponseTimeoutRef.current);
+
+    const persona = aiPersonaRef.current;
+    if (!persona) return;
+
+    chatStepRef.current += 1;
+    const currentStep = chatStepRef.current;
+    const msg = userMsg.toLowerCase().trim();
+
+    let reply = '';
+    
+    if (msg.match(/\b(m\s*or\s*f|m\/f|f\s*or\s*m|gender|girl|boy|guy|female|male)\b/)) {
+      reply = `f, you?`;
+    } else if (msg.match(/\b(age|old|how\s*old)\b/)) {
+      reply = `${persona.age}, hbu?`;
+    } else if (msg.match(/\b(where|location|from|country|wru|city)\b/)) {
+      reply = `i'm from ${persona.location}, what about you?`;
+    } else if (msg.match(/\b(name|who\s*are\s*you|your\s*name)\b/)) {
+      reply = `my name is ${persona.name} :) what's yours?`;
+    } else if (msg.match(/\b(snap|snapchat|insta|instagram|socials|number|whatsapp|phone)\b/)) {
+      reply = `sure, my instagram is @${persona.name.toLowerCase()}_${persona.age} or we can chat here first?`;
+    } else if (msg.match(/\b(hi|hey|hello|yo|sup|whats\s*up|greeting)\b/)) {
+      reply = `hey! how are you?`;
+    } else if (msg.match(/\b(hru|how\s*are\s*you|how\s*u|how\s*r\s*u)\b/)) {
+      reply = `i'm doing good! just relaxing, you?`;
+    } else if (msg.match(/\b(what\s*are\s*you\s*doing|what\s*u\s*doing|doing|whats\s*up|what\s*up|hobbies|hobby|like\s*to\s*do)\b/)) {
+      reply = `i love ${persona.interests.join(', ')}. right now just checking out guffadi! what about you?`;
+    } else if (msg.match(/\b(bye|gtg|leaving|exit)\b/)) {
+      reply = `aw okay, nice chatting with you! bye!`;
+    } else {
+      switch (currentStep) {
+        case 1:
+          reply = `hey! m or f?`;
+          break;
+        case 2:
+          reply = `cool. where are you from?`;
+          break;
+        case 3:
+          reply = `ah nice! what do you like to do for fun?`;
+          break;
+        case 4:
+          reply = `that sounds fun. i'm really into ${persona.interests.slice(0, 2).join(' and ')} lol`;
+          break;
+        case 5:
+          reply = `are you looking for anyone specific on here? so many weirdos usually haha`;
+          break;
+        case 6:
+          reply = `true, glad I matched with someone normal. do you use snap or insta?`;
+          break;
+        case 7:
+          reply = `nice, we should add each other. i'm pretty active on insta`;
+          break;
+        default:
+          const randomReplies = [
+            "haha cool",
+            "that's interesting! tell me more?",
+            "aw that's nice",
+            "oh really? cool",
+            "i see. hbu?",
+            "sorry, what did you say?",
+            "nice haha"
+          ];
+          reply = randomReplies[Math.floor(Math.random() * randomReplies.length)];
+          break;
+      }
+    }
+
+    const delay = Math.max(1000, reply.length * 40 + Math.random() * 400);
+    setIsPartnerTyping(true);
+
+    aiResponseTimeoutRef.current = setTimeout(() => {
+      setIsPartnerTyping(false);
+      setMessages(prev => [
+        ...prev,
+        {
+          key: `msg-ai-${Date.now()}-${Math.random()}`,
+          sender: 'stranger',
+          text: reply,
+          timestamp: Date.now()
+        }
+      ]);
+      if (!isMobileChatOpenRef.current) {
+        setHasUnread(true);
+      }
+    }, delay);
+  };
+
   // 2. Join the matchmaking queue
   useEffect(() => {
+    if (matchPool === 'ai') {
+      if (mode === 'video' && !localStreamReady) return;
+      startAiMatchSession();
+      return () => {
+        if (aiMatchTimeoutRef.current) clearTimeout(aiMatchTimeoutRef.current);
+        if (aiResponseTimeoutRef.current) clearTimeout(aiResponseTimeoutRef.current);
+      };
+    }
+
     if (!socket) return;
     if (mode === 'video' && !localStreamReady) return;
 
@@ -235,7 +463,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       socket.off('signal:ice-candidate');
       socket.emit('leave-queue');
     };
-  }, [socket, mode, interests, localStreamReady]);
+  }, [socket, mode, interests, localStreamReady, matchPool]);
 
   // 3. Autoscroll to bottom when chat updates
   useEffect(() => {
@@ -347,6 +575,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   // Typing event sender (debounced)
   const handleInputChange = (e) => {
     setInputText(e.target.value);
+    if (matchPool === 'ai') return;
     if (!socket || status !== 'matched') return;
 
     if (!isTypingRef.current) {
@@ -365,7 +594,19 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const handleSendMessage = (e) => {
     e.preventDefault();
     const text = inputText.trim();
-    if (!text || !socket || status !== 'matched') return;
+    if (!text || status !== 'matched') return;
+
+    if (matchPool === 'ai') {
+      setMessages(prev => [
+        ...prev,
+        { key: `msg-you-${Date.now()}`, sender: 'you', text, timestamp: Date.now() }
+      ]);
+      setInputText('');
+      triggerAiResponse(text);
+      return;
+    }
+
+    if (!socket) return;
 
     // Send to partner
     socket.emit('send-message', { text });
@@ -386,6 +627,20 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   // Instant Skip/Stop Reconnection Handler
   const handleStopAction = () => {
     if (autoMatchTimeoutRef.current) clearTimeout(autoMatchTimeoutRef.current);
+    if (aiMatchTimeoutRef.current) clearTimeout(aiMatchTimeoutRef.current);
+    if (aiResponseTimeoutRef.current) clearTimeout(aiResponseTimeoutRef.current);
+
+    if (matchPool === 'ai') {
+      setIsPartnerTyping(false);
+      setCurrentPersona(null);
+      aiPersonaRef.current = null;
+      chatStepRef.current = 0;
+      setMessages([{ key: 'system-reinit', sender: 'system', text: 'Connecting to server...' }]);
+      setStatus('connecting');
+      startAiMatchSession();
+      return;
+    }
+
     if (socket) {
       socket.emit('disconnect-chat');
     }
@@ -440,12 +695,23 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
           {/* Partner Video Panel */}
           <div className="video-card">
             {status === 'matched' ? (
-              <video 
-                ref={remoteVideoRef} 
-                className="video-stream" 
-                autoPlay 
-                playsInline 
-              />
+              matchPool === 'ai' && currentPersona ? (
+                <video 
+                  className="video-stream" 
+                  src={currentPersona.videoUrl}
+                  autoPlay 
+                  playsInline 
+                  loop
+                  muted
+                />
+              ) : (
+                <video 
+                  ref={remoteVideoRef} 
+                  className="video-stream" 
+                  autoPlay 
+                  playsInline 
+                />
+              )
             ) : (
               <RetroTv status={status} />
             )}

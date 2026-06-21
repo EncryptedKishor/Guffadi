@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Video, X, Camera, CameraOff } from 'lucide-react';
 
-export default function Landing({ onlineCount, interests, setInterests, onStartChat, onStartMeet }) {
+export default function Landing({ onlineCount, interests, setInterests, onStartChat, onStartMeet, matchPool, setMatchPool }) {
   const [tagInput, setTagInput] = useState('');
   const [joinRoomCode, setJoinRoomCode] = useState('');
   const [localStream, setLocalStream] = useState(null);
@@ -113,6 +113,50 @@ export default function Landing({ onlineCount, interests, setInterests, onStartC
                   onKeyDown={handleKeyDown}
                   onBlur={addTag}
                 />
+              </div>
+            </div>
+
+            <div className="input-group" style={{ marginBottom: '1.2rem' }}>
+              <label>Matchmaking Pool</label>
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.4rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setMatchPool('real')}
+                  style={{
+                    flex: 1,
+                    padding: '0.6rem',
+                    border: 'var(--border-width) solid var(--border-color)',
+                    background: matchPool === 'real' ? 'var(--yellow)' : 'var(--bg-cream)',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    boxShadow: matchPool === 'real' ? 'var(--shadow-sm)' : 'none',
+                    transform: matchPool === 'real' ? 'translate(2px, 2px)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  Real Strangers Only
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMatchPool('ai')}
+                  style={{
+                    flex: 1,
+                    padding: '0.6rem',
+                    border: 'var(--border-width) solid var(--border-color)',
+                    background: matchPool === 'ai' ? 'var(--green)' : 'var(--bg-cream)',
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    boxShadow: matchPool === 'ai' ? 'var(--shadow-sm)' : 'none',
+                    transform: matchPool === 'ai' ? 'translate(2px, 2px)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  AI Female Strangers (Beta)
+                </button>
               </div>
             </div>
  
