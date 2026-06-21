@@ -1,0 +1,11 @@
+RewriteEngine On
+RewriteBase /
+
+# Protect socket.io calls
+RewriteCond %{REQUEST_URI} ^/socket.io
+RewriteRule . - [L]
+
+# Rewrite all non-existent paths to index.html for client-side routing
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.html [L]

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 export default function GroupMeet({ socket, roomId, onLeave }) {
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState(() => 'Stranger ' + Math.floor(Math.random() * 9000 + 1000));
   const [nameInput, setNameInput] = useState('');
   const [localStream, setLocalStream] = useState(null);
   const [screenStream, setScreenStream] = useState(null);
