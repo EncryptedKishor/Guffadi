@@ -66,6 +66,8 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const aiResponseTimeoutRef = useRef(null);
   const aiMatchTimeoutRef = useRef(null);
   const aiFallbackTimeoutRef = useRef(null);
+  const aiSkipTimeoutRef = useRef(null);
+  const aiCamCheckTimeoutRef = useRef(null);
 
   useEffect(() => {
     isMobileChatOpenRef.current = isMobileChatOpen;
@@ -242,6 +244,67 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     }, delay);
   };
 
+  const startAiIdleTimer = () => {
+    if (aiSkipTimeoutRef.current) clearTimeout(aiSkipTimeoutRef.current);
+    // Idle skip after 25 seconds
+    aiSkipTimeoutRef.current = setTimeout(() => {
+      console.log("AI stranger got bored and skipped the match.");
+      handleStopAction();
+    }, 25000);
+  };
+
+  const runAiCamCheck = () => {
+    if (aiCamCheckTimeoutRef.current) clearTimeout(aiCamCheckTimeoutRef.current);
+    if (aiSkipTimeoutRef.current) clearTimeout(aiSkipTimeoutRef.current);
+
+    if (mode === 'video' && videoDisabled && aiPersonaRef.current) {
+      // Ask for camera after 2.5 seconds
+      aiCamCheckTimeoutRef.current = setTimeout(() => {
+        setIsPartnerTyping(true);
+        aiResponseTimeoutRef.current = setTimeout(() => {
+          setIsPartnerTyping(false);
+          const camPrompts = ["cam?", "why black screen?", "turn on camera?", "hello? camera?", "black screen"];
+          const prompt = camPrompts[Math.floor(Math.random() * camPrompts.length)];
+          setMessages(prev => [
+            ...prev,
+            {
+              key: `msg-ai-camcheck-${Date.now()}`,
+              sender: 'stranger',
+              text: prompt,
+              timestamp: Date.now()
+            }
+          ]);
+          
+          // Skip after another 5 seconds if camera remains off
+          aiSkipTimeoutRef.current = setTimeout(() => {
+            console.log("AI stranger skipped because user camera is off.");
+            handleStopAction();
+          }, 5000);
+
+        }, 1000);
+      }, 2000);
+    }
+  };
+
+  // Effect to manage camera checks & idle timer based on camera state when matched with AI
+  useEffect(() => {
+    if (status === 'matched' && aiPersonaRef.current) {
+      if (!videoDisabled) {
+        // If camera is enabled, clear any warning/skip timers
+        if (aiCamCheckTimeoutRef.current) clearTimeout(aiCamCheckTimeoutRef.current);
+        
+        // Start or restore standard idle timer
+        startAiIdleTimer();
+      } else {
+        // Camera disabled: warn and schedule skip
+        runAiCamCheck();
+      }
+    }
+    return () => {
+      if (aiCamCheckTimeoutRef.current) clearTimeout(aiCamCheckTimeoutRef.current);
+    };
+  }, [videoDisabled, status]);
+
   // 2. Join the matchmaking queue
   useEffect(() => {
     if (!socket) return;
@@ -310,24 +373,40 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
         }
         setMessages(introMessages);
 
-        // Trigger first greeting after 1.2s
-        setIsPartnerTyping(true);
-        aiResponseTimeoutRef.current = setTimeout(() => {
-          setIsPartnerTyping(false);
-          
-          const greetings = ["hey!", "hi", "hey there", "hi u"];
-          const selectedGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+        // 15% random early skip chance in video mode
+        if (mode === 'video' && Math.random() < 0.15) {
+          const skipDelay = 8000 + Math.random() * 7000;
+          if (aiSkipTimeoutRef.current) clearTimeout(aiSkipTimeoutRef.current);
+          aiSkipTimeoutRef.current = setTimeout(() => {
+            console.log("AI stranger randomly skipped early.");
+            handleStopAction();
+          }, skipDelay);
+        } else {
+          // Otherwise, start standard idle timer
+          startAiIdleTimer();
+        }
 
-          setMessages(prev => [
-            ...prev,
-            {
-              key: `msg-ai-greet`,
-              sender: 'stranger',
-              text: selectedGreeting,
-              timestamp: Date.now()
-            }
-          ]);
-        }, 1200);
+        // Trigger first greeting with typing delay
+        const greetReactionDelay = 600 + Math.random() * 800;
+        setTimeout(() => {
+          setIsPartnerTyping(true);
+          aiResponseTimeoutRef.current = setTimeout(() => {
+            setIsPartnerTyping(false);
+            
+            const greetings = ["hey!", "hi", "hey there", "hi u"];
+            const selectedGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+
+            setMessages(prev => [
+              ...prev,
+              {
+                key: `msg-ai-greet`,
+                sender: 'stranger',
+                text: selectedGreeting,
+                timestamp: Date.now()
+              }
+            ]);
+          }, 1000 + Math.random() * 800);
+        }, greetReactionDelay);
 
       }, fallbackDelay);
     });
@@ -437,6 +516,8 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       if (aiFallbackTimeoutRef.current) clearTimeout(aiFallbackTimeoutRef.current);
       if (aiMatchTimeoutRef.current) clearTimeout(aiMatchTimeoutRef.current);
       if (aiResponseTimeoutRef.current) clearTimeout(aiResponseTimeoutRef.current);
+      if (aiCamCheckTimeoutRef.current) clearTimeout(aiCamCheckTimeoutRef.current);
+      if (aiSkipTimeoutRef.current) clearTimeout(aiSkipTimeoutRef.current);
       socket.off('waiting');
       socket.off('matched');
       socket.off('message');
@@ -587,6 +668,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       ]);
       setInputText('');
       triggerAiResponse(text);
+      startAiIdleTimer(); // Reset the 25-second idle skip timer
       return;
     }
 
@@ -614,6 +696,8 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     if (aiMatchTimeoutRef.current) clearTimeout(aiMatchTimeoutRef.current);
     if (aiResponseTimeoutRef.current) clearTimeout(aiResponseTimeoutRef.current);
     if (aiFallbackTimeoutRef.current) clearTimeout(aiFallbackTimeoutRef.current);
+    if (aiSkipTimeoutRef.current) clearTimeout(aiSkipTimeoutRef.current);
+    if (aiCamCheckTimeoutRef.current) clearTimeout(aiCamCheckTimeoutRef.current);
 
     setIsPartnerTyping(false);
     setCurrentPersona(null);
