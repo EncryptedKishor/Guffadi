@@ -1223,3 +1223,374 @@ body:has(.in-video-chat) {
     justify-content: center !important;
   }
 }
+
+/* --- Group Meet (Google Meet Style) Styles --- */
+
+.meet-join-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  min-height: calc(100vh - 120px);
+  padding: 1.5rem;
+}
+
+.meet-join-card {
+  max-width: 480px;
+  width: 100%;
+  padding: 2.5rem;
+  background: var(--bg-white);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  border-radius: 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.meet-join-title {
+  font-size: 1.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.meet-join-desc {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.room-code-tag {
+  background-color: var(--green);
+  padding: 0.2rem 0.5rem;
+  border: var(--border-width-sm) solid var(--border-color);
+  font-weight: 800;
+  display: inline-block;
+  transform: rotate(-1.5deg);
+  box-shadow: var(--shadow-sm);
+  color: var(--text-dark);
+}
+
+.meet-join-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: left;
+}
+
+.meet-join-input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  outline: none;
+  background: var(--bg-cream);
+  border-radius: 4px;
+}
+
+.meet-join-input:focus {
+  box-shadow: var(--shadow-main);
+  background: var(--bg-white);
+}
+
+.meet-join-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.meet-join-actions .neon-button {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  justify-content: center;
+}
+
+.meet-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: calc(100vh - 120px);
+  position: relative;
+  gap: 1.5rem;
+  padding-bottom: 90px; /* Spacer for fixed bottom controls */
+}
+
+.meet-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.meet-info-badge {
+  background: var(--bg-white);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  padding: 0.4rem 0.8rem;
+  font-weight: 800;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meet-room-badge {
+  background: var(--yellow);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  padding: 0.4rem 0.8rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transform: rotate(1deg);
+}
+
+.meet-video-grid {
+  display: grid;
+  gap: 1.5rem;
+  flex: 1;
+  width: 100%;
+}
+
+.grid-cols-1 {
+  grid-template-columns: 1fr;
+  max-width: 800px;
+  margin: 0 auto;
+  aspect-ratio: 16/9;
+}
+
+.grid-cols-2-split {
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 768px) {
+  .grid-cols-2-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+@media (max-width: 768px) {
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 768px) {
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.video-card {
+  position: relative;
+  background: var(--bg-dark);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-main);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  aspect-ratio: 16/10;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.video-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-hidden {
+  display: none;
+}
+
+.video-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: var(--indigo);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--text-dark);
+  animation: online-pulse 2s infinite ease-in-out;
+}
+
+.video-label-tag {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: var(--bg-white);
+  border: var(--border-width-sm) solid var(--border-color);
+  padding: 0.3rem 0.6rem;
+  font-weight: 800;
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+.video-label-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.icon-alert {
+  color: var(--rose);
+}
+
+.meet-sidebar-info {
+  display: flex;
+  margin-top: 1rem;
+}
+
+.sidebar-info-card {
+  width: 100%;
+  background: var(--bg-white);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-main);
+  padding: 1.25rem 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sidebar-info-card h4 {
+  font-size: 1.05rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.sidebar-info-card p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.copy-link-input-group {
+  display: flex;
+  border: var(--border-width) solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.copy-link-input {
+  flex: 1;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  background: var(--bg-cream);
+  font-size: 0.85rem;
+  font-family: monospace;
+}
+
+.copy-link-btn {
+  background: var(--yellow);
+  border: none;
+  border-left: var(--border-width) solid var(--border-color);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-link-btn:active {
+  background: var(--bg-cream);
+}
+
+.meet-controls-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1rem;
+  background: var(--bg-white);
+  border: var(--border-width) solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  z-index: 100;
+}
+
+.control-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: var(--border-width-sm) solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  background: var(--bg-cream);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+
+.control-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 3px 3px 0 var(--border-color);
+}
+
+.control-btn:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 var(--border-color);
+}
+
+.btn-off {
+  background: var(--rose) !important;
+  color: var(--text-dark) !important;
+}
+
+.btn-active {
+  background: var(--green) !important;
+}
+
+.leave-btn {
+  background: #ef4444 !important;
+  color: white !important;
+}
+
+.leave-btn:hover {
+  background: #dc2626 !important;
+}
+
+.in-meet {
+  max-width: 1200px !important;
+}
+

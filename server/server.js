@@ -38,7 +38,31 @@ const videoQueue = [];
 // Track active matches: socketId -> { partnerId, roomId, mode }
 const activeMatches = new Map();
 
+// Track active group meeting rooms: roomId -> Map(socketId -> { socketId, name })
+const groupRooms = new Map();
+// Track which group room a socket is currently in: socketId -> roomId
+const socketToGroupRoom = new Map();
 
+function handleLeaveGroupRoom(socket) {
+  const roomId = socketToGroupRoom.get(socket.id);
+  if (roomId) {
+    socketToGroupRoom.delete(socket.id);
+    const room = groupRooms.get(roomId);
+    if (room) {
+      room.delete(socket.id);
+      console.log(`User ${socket.id} left group room ${roomId}. Remaining: ${room.size}`);
+      
+      // Notify remaining participants
+      socket.to(roomId).emit('user-left', { socketId: socket.id });
+      
+      if (room.size === 0) {
+        groupRooms.delete(roomId);
+        console.log(`Group room ${roomId} is empty and has been deleted.`);
+      }
+    }
+    socket.leave(roomId);
+  }
+}
 
 // Helper: Normalize interest strings
 function normalizeInterests(interestsArray) {
@@ -279,11 +303,73 @@ io.on('connection', (socket) => {
     }
   });
 
+  // --- Google Meet-Style Group Calling Signaling ---
+  
+  socket.on('join-group-room', (data) => {
+    const { roomId, name } = data;
+    
+    // Safety check: leave any existing match or queue or group room
+    handleDisconnectChat(socket);
+    removeFromQueues(socket.id);
+    handleLeaveGroupRoom(socket);
+
+    socket.join(roomId);
+    socketToGroupRoom.set(socket.id, roomId);
+
+    if (!groupRooms.has(roomId)) {
+      groupRooms.set(roomId, new Map());
+    }
+    const room = groupRooms.get(roomId);
+
+    // Get list of existing users before adding the new user
+    const existingUsers = Array.from(room.values());
+
+    // Add new user to the room map
+    room.set(socket.id, { socketId: socket.id, name });
+
+    console.log(`User ${name} (${socket.id}) joined group room ${roomId}. Total: ${room.size}`);
+
+    // Send the list of existing users to the newly joined user
+    socket.emit('room-users', { users: existingUsers });
+
+    // Notify existing users in the room that a new user joined
+    socket.to(roomId).emit('user-joined', { socketId: socket.id, name });
+  });
+
+  socket.on('leave-group-room', () => {
+    handleLeaveGroupRoom(socket);
+  });
+
+  socket.on('group-signal:offer', (data) => {
+    const { to, offer } = data;
+    io.to(to).emit('group-signal:offer', {
+      fromSocketId: socket.id,
+      offer
+    });
+  });
+
+  socket.on('group-signal:answer', (data) => {
+    const { to, answer } = data;
+    io.to(to).emit('group-signal:answer', {
+      fromSocketId: socket.id,
+      answer
+    });
+  });
+
+  socket.on('group-signal:ice-candidate', (data) => {
+    const { to, candidate } = data;
+    io.to(to).emit('group-signal:ice-candidate', {
+      fromSocketId: socket.id,
+      candidate
+    });
+  });
+
   // Disconnection handler
   socket.on('disconnect', () => {
     console.log(`User disconnected: ${socket.id}`);
     removeFromQueues(socket.id);
     handleDisconnectChat(socket);
+    handleLeaveGroupRoom(socket);
     io.emit('stats', { onlineCount: io.engine.clientsCount });
   });
 });
