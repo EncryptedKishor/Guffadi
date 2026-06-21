@@ -3,10 +3,12 @@ import io from 'socket.io-client';
 import { MessageCircle } from 'lucide-react';
 import Landing from './components/Landing';
 import ChatSession from './components/ChatSession';
+import GroupMeet from './components/GroupMeet';
 
 export default function App() {
-  const [view, setView] = useState('landing'); // 'landing' | 'chat'
+  const [view, setView] = useState('landing'); // 'landing' | 'chat' | 'meet'
   const [mode, setMode] = useState('text'); // 'text' | 'video'
+  const [meetRoomId, setMeetRoomId] = useState('');
   const [interests, setInterests] = useState([]);
   const [socket, setSocket] = useState(null);
   const [onlineCount, setOnlineCount] = useState(() => Math.floor(Math.random() * 80) + 540);
@@ -55,6 +57,23 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Handle direct link entry and popstate routing
+  useEffect(() => {
+    const checkPath = () => {
+      const path = window.location.pathname;
+      const match = path.match(/^\/meet\/([^/]+)$/);
+      if (match) {
+        setMeetRoomId(match[1]);
+        setView('meet');
+      } else {
+        setView('landing');
+      }
+    };
+    checkPath();
+    window.addEventListener('popstate', checkPath);
+    return () => window.removeEventListener('popstate', checkPath);
+  }, []);
+
   const handleStartChat = (selectedMode) => {
     // Unlock SpeechSynthesis for mobile/Safari by playing a silent string synchronously in click handler
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -73,11 +92,25 @@ export default function App() {
     setView('landing');
   };
 
+  const handleStartMeet = (roomId) => {
+    setMeetRoomId(roomId);
+    window.history.pushState({}, '', `/meet/${roomId}`);
+    setView('meet');
+  };
+
+  const handleLeaveMeet = () => {
+    if (socket) {
+      socket.emit('leave-group-room');
+    }
+    window.history.pushState({}, '', '/');
+    setView('landing');
+  };
+
   return (
-    <div className={`app-container ${view === 'chat' ? 'in-chat' : ''} ${view === 'chat' && mode === 'video' ? 'in-video-chat' : ''}`}>
+    <div className={`app-container ${view === 'chat' ? 'in-chat' : ''} ${view === 'chat' && mode === 'video' ? 'in-video-chat' : ''} ${view === 'meet' ? 'in-meet' : ''}`}>
       {/* Premium Header */}
       <header className="app-header">
-        <div className="logo" onClick={handleLeaveChat} style={{ cursor: 'pointer' }}>
+        <div className="logo" onClick={view === 'meet' ? handleLeaveMeet : handleLeaveChat} style={{ cursor: 'pointer' }}>
           <MessageCircle size={28} style={{ color: 'var(--text-dark)' }} />
           Guffadi
         </div>
@@ -98,13 +131,20 @@ export default function App() {
           interests={interests}
           setInterests={setInterests}
           onStartChat={handleStartChat}
+          onStartMeet={handleStartMeet}
         />
-      ) : (
+      ) : view === 'chat' ? (
         <ChatSession
           socket={socket}
           mode={mode}
           interests={interests}
           onLeave={handleLeaveChat}
+        />
+      ) : (
+        <GroupMeet
+          socket={socket}
+          roomId={meetRoomId}
+          onLeave={handleLeaveMeet}
         />
       )}
     </div>
