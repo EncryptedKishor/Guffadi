@@ -4,45 +4,45 @@ import RetroTv from './RetroTv';
 
 const aiPersonas = [
   {
-    name: 'Emily',
-    age: 21,
-    location: 'New York, USA',
-    interests: ['music', 'travel', 'books', 'coffee'],
-    videoUrl: '/videos/girl_intel.mp4'
-  },
-  {
-    name: 'Sofia',
-    age: 22,
-    location: 'Barcelona, Spain',
-    interests: ['surf', 'photo', 'beach', 'hiking'],
-    videoUrl: '/videos/face_1.mp4'
-  },
-  {
     name: 'Priya',
     age: 20,
     location: 'Kathmandu, Nepal',
-    interests: ['coding', 'art', 'anime', 'momos'],
+    interests: ['music', 'travel', 'anime', 'momos'],
+    videoUrl: '/videos/girl_intel.mp4'
+  },
+  {
+    name: 'Sneha',
+    age: 22,
+    location: 'Lalitpur, Nepal',
+    interests: ['photography', 'dance', 'tiktok', 'cafe'],
+    videoUrl: '/videos/face_1.mp4'
+  },
+  {
+    name: 'Kritika',
+    age: 20,
+    location: 'Pokhara, Nepal',
+    interests: ['movies', 'guitar', 'lakes', 'singing'],
     videoUrl: '/videos/face_2.mp4'
   },
   {
-    name: 'Jessica',
-    age: 23,
-    location: 'London, UK',
-    interests: ['gaming', 'design', 'tea', 'music'],
-    videoUrl: '/videos/face_3.mp4'
-  },
-  {
-    name: 'Chloe',
+    name: 'Alisha',
     age: 19,
-    location: 'Toronto, Canada',
-    interests: ['movies', 'fitness', 'dance', 'cats'],
-    videoUrl: '/videos/face_4.mp4'
+    location: 'Butwal, Nepal',
+    interests: ['gaming', 'food', 'makeup', 'shopping'],
+    videoUrl: '/videos/face_3.mp4'
   },
   {
     name: 'Maya',
     age: 21,
     location: 'Delhi, India',
-    interests: ['food', 'shopping', 'movies', 'dance'],
+    interests: ['travel', 'fashion', 'cooking', 'music'],
+    videoUrl: '/videos/face_4.mp4'
+  },
+  {
+    name: 'Divya',
+    age: 21,
+    location: 'Dharan, Nepal',
+    interests: ['dance', 'movies', 'hiking', 'momos'],
     videoUrl: '/videos/face_5.mp4'
   }
 ];
@@ -59,6 +59,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
   const [localStreamReady, setLocalStreamReady] = useState(mode !== 'video');
   const [remoteStream, setRemoteStream] = useState(null);
   const [currentPersona, setCurrentPersona] = useState(null);
+  const [aiCameraAngle, setAiCameraAngle] = useState('face'); // 'face' | 'hair' | 'ceiling'
 
   const isMobileChatOpenRef = useRef(false);
   const aiPersonaRef = useRef(null);
@@ -168,56 +169,67 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
 
     let reply = '';
     
-    if (msg.match(/\b(m\s*or\s*f|m\/f|f\s*or\s*m|gender|girl|boy|guy|female|male)\b/)) {
-      reply = `f, you?`;
-    } else if (msg.match(/\b(age|old|how\s*old)\b/)) {
-      reply = `${persona.age}, hbu?`;
-    } else if (msg.match(/\b(where|location|from|country|wru|city)\b/)) {
-      reply = `i'm from ${persona.location}, what about you?`;
-    } else if (msg.match(/\b(name|who\s*are\s*you|your\s*name)\b/)) {
-      reply = `my name is ${persona.name} :) what's yours?`;
-    } else if (msg.match(/\b(snap|snapchat|insta|instagram|socials|number|whatsapp|phone)\b/)) {
-      reply = `sure, my instagram is @${persona.name.toLowerCase()}_${persona.age} or we can chat here first?`;
-    } else if (msg.match(/\b(hi|hey|hello|yo|sup|whats\s*up|greeting)\b/)) {
-      reply = `hey! how are you?`;
-    } else if (msg.match(/\b(hru|how\s*are\s*you|how\s*u|how\s*r\s*u)\b/)) {
-      reply = `i'm doing good! just relaxing, you?`;
-    } else if (msg.match(/\b(what\s*are\s*you\s*doing|what\s*u\s*doing|doing|whats\s*up|what\s*up|hobbies|hobby|like\s*to\s*do)\b/)) {
-      reply = `i love ${persona.interests.join(', ')}. right now just checking out guffadi! what about you?`;
-    } else if (msg.match(/\b(bye|gtg|leaving|exit)\b/)) {
-      reply = `aw okay, nice chatting with you! bye!`;
+    // Check if user is asking to see the face
+    const isFaceRequest = msg.match(/\b(face|show\s*face|dekhau|dekhana|mukh|herau|heram|herne|open|camera|cam|look)\b/) || msg.includes('face') || msg.includes('dekhau') || msg.includes('dekhna');
+
+    if (isFaceRequest && aiCameraAngle !== 'face') {
+      setAiCameraAngle('face');
+      const faceReplies = [
+        "la la sry dekhae haha",
+        "huss la la hera",
+        "la dekhae ta oee haha",
+        "la sry sry, aile thik xa?",
+        "la visual thik xa ta aile? haha"
+      ];
+      reply = faceReplies[Math.floor(Math.random() * faceReplies.length)];
+    } else if (msg.match(/\b(m\s*or\s*f|m\/f|gender|girl|boy|guy|female|male|kta|kti|keta|keti)\b/) || msg.includes('kta') || msg.includes('kti')) {
+      reply = `kti ho ma ta, tmi kta ho ki kti?`;
+    } else if (msg.match(/\b(age|old|how\s*old|kati\s*barsa|kati\s*varxa|kati\s*ko)\b/) || msg.includes('kati barsa') || msg.includes('kati varxa') || msg.includes('kati ko')) {
+      reply = `ma ta ${persona.age} ko vaye, tmi ni?`;
+    } else if (msg.match(/\b(where|location|from|country|wru|city|kata|ghar|kahan|kaha)\b/) || msg.includes('kata bata') || msg.includes('ghar kata')) {
+      reply = `ma ${persona.location} bata ho, tmi kata ko?`;
+    } else if (msg.match(/\b(name|who\s*are\s*you|your\s*name|naam|nam)\b/) || msg.includes('naam k ho') || msg.includes('nam k ho')) {
+      reply = `ma ${persona.name} ho, tmi?`;
+    } else if (msg.match(/\b(snap|snapchat|insta|instagram|socials|number|whatsapp|phone|id)\b/) || msg.includes('insta id') || msg.includes('contact')) {
+      reply = `insta id @${persona.name.toLowerCase()}_${persona.age} हो mero, add garana la!`;
+    } else if (msg.match(/\b(hi|hey|hello|yo|sup|whats\s*up|sanchai|sancai|sanchye|khabar)\b/) || msg.includes('sanchai')) {
+      reply = `hey! sanchai xu, tmi sanchai xau? k xa khabar?`;
+    } else if (msg.match(/\b(what\s*are\s*you\s*doing|what\s*u\s*doing|doing|whats\s*up|gardai|k\s*gardai|hobbies)\b/) || msg.includes('k gardai')) {
+      reply = `kei xaina, guffadi ma guff gareko haha. tmi k gardai?`;
+    } else if (msg.match(/\b(bye|gtg|leaving|exit|buda|choda)\b/)) {
+      reply = `aw okay, paxi guff garamla. bye!`;
     } else {
       switch (currentStep) {
         case 1:
-          reply = `hey! m or f?`;
+          reply = `oee, kta ho ki kti?`;
           break;
         case 2:
-          reply = `cool. where are you from?`;
+          reply = `eh cool, ma kti ho. tmi kata bata ho?`;
           break;
         case 3:
-          reply = `ah nice! what do you like to do for fun?`;
+          reply = `nice! mero ghar ta ${persona.location} ho, tmi sanchai xau ni?`;
           break;
         case 4:
-          reply = `that sounds fun. i'm really into ${persona.interests.slice(0, 2).join(' and ')} lol`;
+          reply = `k gardai xau ta aile bro/sis?`;
           break;
         case 5:
-          reply = `are you looking for anyone specific on here? so many weirdos usually haha`;
+          reply = `kasto babbal haha. are you looking for anyone specific on here?`;
           break;
         case 6:
-          reply = `true, glad I matched with someone normal. do you use snap or insta?`;
+          reply = `insta id deu na add garxu ma :)`;
           break;
         case 7:
-          reply = `nice, we should add each other. i'm pretty active on insta`;
+          reply = `paxi guff garamla hai teso vaye`;
           break;
         default:
           const randomReplies = [
-            "haha cool",
-            "that's interesting! tell me more?",
-            "aw that's nice",
-            "oh really? cool",
-            "i see. hbu?",
-            "sorry, what did you say?",
-            "nice haha"
+            "haha babbal",
+            "kasto hawa kura gareko tmi ta",
+            "tori guff nadeu na bro haha",
+            "eh aeae cool",
+            "kada xau tmi ta",
+            "ani k xa ta aru khabar?",
+            "aeae teso po haha"
           ];
           reply = randomReplies[Math.floor(Math.random() * randomReplies.length)];
           break;
@@ -356,6 +368,17 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
         aiPersonaRef.current = selectedPersona;
         setStatus('matched');
 
+        // Randomize camera angle for realism
+        const angles = ['face', 'hair', 'ceiling'];
+        const r = Math.random();
+        let chosenAngle = 'face';
+        if (r < 0.20) {
+          chosenAngle = 'hair';
+        } else if (r < 0.40) {
+          chosenAngle = 'ceiling';
+        }
+        setAiCameraAngle(chosenAngle);
+
         const introMessages = [
           { key: 'match-1', sender: 'system', text: 'You are now chatting with a random stranger!' }
         ];
@@ -393,7 +416,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
           aiResponseTimeoutRef.current = setTimeout(() => {
             setIsPartnerTyping(false);
             
-            const greetings = ["hey!", "hi", "hey there", "hi u"];
+            const greetings = ["oee!", "hey!", "sanchai xau?", "k xa khabar?"];
             const selectedGreeting = greetings[Math.floor(Math.random() * greetings.length)];
 
             setMessages(prev => [
@@ -703,6 +726,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     setCurrentPersona(null);
     aiPersonaRef.current = null;
     chatStepRef.current = 0;
+    setAiCameraAngle('face'); // Reset camera angle
 
     if (socket) {
       socket.emit('disconnect-chat');
@@ -759,7 +783,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
             {status === 'matched' ? (
               currentPersona ? (
                 <video 
-                  className="video-stream" 
+                  className={`video-stream ai-angle-${aiCameraAngle}`} 
                   src={currentPersona.videoUrl}
                   autoPlay 
                   playsInline 

@@ -504,6 +504,18 @@ body {
   transform: scaleX(-1);
 }
 
+.video-stream.ai-angle-hair {
+  object-fit: cover;
+  transform: scale(2.2) translateY(30%);
+}
+
+.video-stream.ai-angle-ceiling {
+  object-fit: cover;
+  transform: scale(2.5) translateY(-35%);
+  filter: brightness(0.7) contrast(1.1);
+}
+
+
 .video-label {
   position: absolute;
   bottom: 10px;
