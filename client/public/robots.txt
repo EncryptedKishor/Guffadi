@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /meet/
+Sitemap: https://guffadi.com/sitemap.xml
