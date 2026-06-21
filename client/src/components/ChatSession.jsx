@@ -47,7 +47,7 @@ const aiPersonas = [
   }
 ];
 
-export default function ChatSession({ socket, mode, interests, onLeave, matchPool }) {
+export default function ChatSession({ socket, mode, interests, onLeave }) {
   const [status, setStatus] = useState('connecting'); // 'connecting' | 'waiting' | 'matched' | 'disconnected'
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -65,6 +65,7 @@ export default function ChatSession({ socket, mode, interests, onLeave, matchPoo
   const chatStepRef = useRef(0);
   const aiResponseTimeoutRef = useRef(null);
   const aiMatchTimeoutRef = useRef(null);
+  const aiFallbackTimeoutRef = useRef(null);
 
   useEffect(() => {
     isMobileChatOpenRef.current = isMobileChatOpen;
@@ -151,88 +152,7 @@ export default function ChatSession({ socket, mode, interests, onLeave, matchPoo
     };
   }, [mode]);
 
-  // Helper for simulated AI matchmaking
-  const startAiMatchSession = () => {
-    if (aiMatchTimeoutRef.current) clearTimeout(aiMatchTimeoutRef.current);
-    if (aiResponseTimeoutRef.current) clearTimeout(aiResponseTimeoutRef.current);
-    setIsPartnerTyping(false);
-    setCurrentPersona(null);
-    aiPersonaRef.current = null;
-    chatStepRef.current = 0;
 
-    setStatus('connecting');
-    setMessages([{ key: 'system-init', sender: 'system', text: 'Connecting to server...' }]);
-
-    // Step 1: waiting after 800ms
-    aiMatchTimeoutRef.current = setTimeout(() => {
-      setStatus('waiting');
-      setMessages([
-        { key: 'waiting-1', sender: 'system', text: 'Looking for a stranger...' },
-        interests.length > 0
-          ? { key: 'waiting-2', sender: 'system', text: `Searching for matches with interests: ${interests.join(', ')}` }
-          : { key: 'waiting-2', sender: 'system', text: 'Matching randomly...' }
-      ]);
-
-      // Step 2: matched after 1.2 to 2.2 seconds
-      aiMatchTimeoutRef.current = setTimeout(() => {
-        let selectedPersona = null;
-        if (interests.length > 0) {
-          const matching = aiPersonas.filter(p => 
-            p.interests.some(i => interests.map(ui => ui.toLowerCase()).includes(i.toLowerCase()))
-          );
-          if (matching.length > 0) {
-            selectedPersona = matching[Math.floor(Math.random() * matching.length)];
-          }
-        }
-        
-        if (!selectedPersona) {
-          selectedPersona = aiPersonas[Math.floor(Math.random() * aiPersonas.length)];
-        }
-
-        setCurrentPersona(selectedPersona);
-        aiPersonaRef.current = selectedPersona;
-        setStatus('matched');
-
-        const introMessages = [
-          { key: 'match-1', sender: 'system', text: 'You are now chatting with a random stranger!' }
-        ];
-
-        const common = selectedPersona.interests.filter(i => 
-          interests.map(ui => ui.toLowerCase()).includes(i.toLowerCase())
-        );
-
-        if (common.length > 0) {
-          introMessages.push({
-            key: 'match-2',
-            sender: 'system',
-            text: `🎉 You both like: ${common.join(', ')}`
-          });
-        }
-        setMessages(introMessages);
-
-        // Step 3: Greeting after 1.5s
-        setIsPartnerTyping(true);
-        aiResponseTimeoutRef.current = setTimeout(() => {
-          setIsPartnerTyping(false);
-          
-          const greetings = ["hey!", "hi", "hey there", "hi u"];
-          const selectedGreeting = greetings[Math.floor(Math.random() * greetings.length)];
-
-          setMessages(prev => [
-            ...prev,
-            {
-              key: `msg-ai-greet`,
-              sender: 'stranger',
-              text: selectedGreeting,
-              timestamp: Date.now()
-            }
-          ]);
-        }, 1200);
-
-      }, 1200 + Math.random() * 1000);
-
-    }, 800);
-  };
 
   const triggerAiResponse = (userMsg) => {
     if (aiResponseTimeoutRef.current) clearTimeout(aiResponseTimeoutRef.current);
@@ -324,15 +244,6 @@ export default function ChatSession({ socket, mode, interests, onLeave, matchPoo
 
   // 2. Join the matchmaking queue
   useEffect(() => {
-    if (matchPool === 'ai') {
-      if (mode === 'video' && !localStreamReady) return;
-      startAiMatchSession();
-      return () => {
-        if (aiMatchTimeoutRef.current) clearTimeout(aiMatchTimeoutRef.current);
-        if (aiResponseTimeoutRef.current) clearTimeout(aiResponseTimeoutRef.current);
-      };
-    }
-
     if (!socket) return;
     if (mode === 'video' && !localStreamReady) return;
 
@@ -351,9 +262,80 @@ export default function ChatSession({ socket, mode, interests, onLeave, matchPoo
           ? { key: 'waiting-2', sender: 'system', text: `Searching for matches with interests: ${interests.join(', ')}` }
           : { key: 'waiting-2', sender: 'system', text: 'Matching randomly...' }
       ]);
+
+      // Clear any existing fallback timer
+      if (aiFallbackTimeoutRef.current) clearTimeout(aiFallbackTimeoutRef.current);
+
+      // Start randomized fallback timer between 4 and 7 seconds
+      const fallbackDelay = 4000 + Math.random() * 3000;
+      aiFallbackTimeoutRef.current = setTimeout(() => {
+        console.log("No real stranger found in queue. Fallback to AI stranger...");
+        
+        // 1. Leave server queue
+        socket.emit('leave-queue');
+
+        // 2. Pick AI Persona
+        let selectedPersona = null;
+        if (interests.length > 0) {
+          const matching = aiPersonas.filter(p => 
+            p.interests.some(i => interests.map(ui => ui.toLowerCase()).includes(i.toLowerCase()))
+          );
+          if (matching.length > 0) {
+            selectedPersona = matching[Math.floor(Math.random() * matching.length)];
+          }
+        }
+        
+        if (!selectedPersona) {
+          selectedPersona = aiPersonas[Math.floor(Math.random() * aiPersonas.length)];
+        }
+
+        setCurrentPersona(selectedPersona);
+        aiPersonaRef.current = selectedPersona;
+        setStatus('matched');
+
+        const introMessages = [
+          { key: 'match-1', sender: 'system', text: 'You are now chatting with a random stranger!' }
+        ];
+
+        const common = selectedPersona.interests.filter(i => 
+          interests.map(ui => ui.toLowerCase()).includes(i.toLowerCase())
+        );
+
+        if (common.length > 0) {
+          introMessages.push({
+            key: 'match-2',
+            sender: 'system',
+            text: `🎉 You both like: ${common.join(', ')}`
+          });
+        }
+        setMessages(introMessages);
+
+        // Trigger first greeting after 1.2s
+        setIsPartnerTyping(true);
+        aiResponseTimeoutRef.current = setTimeout(() => {
+          setIsPartnerTyping(false);
+          
+          const greetings = ["hey!", "hi", "hey there", "hi u"];
+          const selectedGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+
+          setMessages(prev => [
+            ...prev,
+            {
+              key: `msg-ai-greet`,
+              sender: 'stranger',
+              text: selectedGreeting,
+              timestamp: Date.now()
+            }
+          ]);
+        }, 1200);
+
+      }, fallbackDelay);
     });
 
     socket.on('matched', async ({ roomId, partnerId, initiator, commonInterests }) => {
+      // Clear AI fallback timer immediately
+      if (aiFallbackTimeoutRef.current) clearTimeout(aiFallbackTimeoutRef.current);
+
       setStatus('matched');
       setIsPartnerTyping(false);
       partnerIdRef.current = partnerId;
@@ -411,7 +393,6 @@ export default function ChatSession({ socket, mode, interests, onLeave, matchPoo
     socket.on('signal:offer', async ({ offer }) => {
       let pc = peerConnectionRef.current;
       if (!pc) {
-        // If offer arrives before receiver initializes their peer connection, initialize it first.
         await setupPeerConnection(false);
         pc = peerConnectionRef.current;
       }
@@ -453,6 +434,9 @@ export default function ChatSession({ socket, mode, interests, onLeave, matchPoo
 
     return () => {
       if (autoMatchTimeoutRef.current) clearTimeout(autoMatchTimeoutRef.current);
+      if (aiFallbackTimeoutRef.current) clearTimeout(aiFallbackTimeoutRef.current);
+      if (aiMatchTimeoutRef.current) clearTimeout(aiMatchTimeoutRef.current);
+      if (aiResponseTimeoutRef.current) clearTimeout(aiResponseTimeoutRef.current);
       socket.off('waiting');
       socket.off('matched');
       socket.off('message');
@@ -463,7 +447,7 @@ export default function ChatSession({ socket, mode, interests, onLeave, matchPoo
       socket.off('signal:ice-candidate');
       socket.emit('leave-queue');
     };
-  }, [socket, mode, interests, localStreamReady, matchPool]);
+  }, [socket, mode, interests, localStreamReady]);
 
   // 3. Autoscroll to bottom when chat updates
   useEffect(() => {
@@ -575,7 +559,7 @@ export default function ChatSession({ socket, mode, interests, onLeave, matchPoo
   // Typing event sender (debounced)
   const handleInputChange = (e) => {
     setInputText(e.target.value);
-    if (matchPool === 'ai') return;
+    if (aiPersonaRef.current) return;
     if (!socket || status !== 'matched') return;
 
     if (!isTypingRef.current) {
@@ -596,7 +580,7 @@ export default function ChatSession({ socket, mode, interests, onLeave, matchPoo
     const text = inputText.trim();
     if (!text || status !== 'matched') return;
 
-    if (matchPool === 'ai') {
+    if (aiPersonaRef.current) {
       setMessages(prev => [
         ...prev,
         { key: `msg-you-${Date.now()}`, sender: 'you', text, timestamp: Date.now() }
@@ -629,23 +613,17 @@ export default function ChatSession({ socket, mode, interests, onLeave, matchPoo
     if (autoMatchTimeoutRef.current) clearTimeout(autoMatchTimeoutRef.current);
     if (aiMatchTimeoutRef.current) clearTimeout(aiMatchTimeoutRef.current);
     if (aiResponseTimeoutRef.current) clearTimeout(aiResponseTimeoutRef.current);
+    if (aiFallbackTimeoutRef.current) clearTimeout(aiFallbackTimeoutRef.current);
 
-    if (matchPool === 'ai') {
-      setIsPartnerTyping(false);
-      setCurrentPersona(null);
-      aiPersonaRef.current = null;
-      chatStepRef.current = 0;
-      setMessages([{ key: 'system-reinit', sender: 'system', text: 'Connecting to server...' }]);
-      setStatus('connecting');
-      startAiMatchSession();
-      return;
-    }
+    setIsPartnerTyping(false);
+    setCurrentPersona(null);
+    aiPersonaRef.current = null;
+    chatStepRef.current = 0;
 
     if (socket) {
       socket.emit('disconnect-chat');
     }
     closePeerConnection();
-    setIsPartnerTyping(false);
     
     // Instantly start matching again
     if (socket) {
@@ -695,7 +673,7 @@ export default function ChatSession({ socket, mode, interests, onLeave, matchPoo
           {/* Partner Video Panel */}
           <div className="video-card">
             {status === 'matched' ? (
-              matchPool === 'ai' && currentPersona ? (
+              currentPersona ? (
                 <video 
                   className="video-stream" 
                   src={currentPersona.videoUrl}

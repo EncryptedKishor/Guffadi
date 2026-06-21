@@ -13,7 +13,6 @@ export default function App() {
   const [socket, setSocket] = useState(null);
   const [onlineCount, setOnlineCount] = useState(() => Math.floor(Math.random() * 80) + 540);
   const [connected, setConnected] = useState(false);
-  const [matchPool, setMatchPool] = useState('real'); // 'real' | 'ai'
 
   // Initialize socket connection on load
   useEffect(() => {
@@ -133,8 +132,6 @@ export default function App() {
           setInterests={setInterests}
           onStartChat={handleStartChat}
           onStartMeet={handleStartMeet}
-          matchPool={matchPool}
-          setMatchPool={setMatchPool}
         />
       ) : view === 'chat' ? (
         <ChatSession
@@ -142,7 +139,6 @@ export default function App() {
           mode={mode}
           interests={interests}
           onLeave={handleLeaveChat}
-          matchPool={matchPool}
         />
       ) : (
         <GroupMeet
