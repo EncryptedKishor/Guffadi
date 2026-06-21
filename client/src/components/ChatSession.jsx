@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Mic, MicOff, Video, VideoOff, Home, AlertCircle, Sparkles, MessageSquare, X, MessageCircle } from 'lucide-react';
+import RetroTv from './RetroTv';
 
 
 
@@ -446,10 +447,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
                 playsInline 
               />
             ) : (
-              <div className="video-spinner">
-                <div className="spinner"></div>
-                <span>Waiting for partner...</span>
-              </div>
+              <RetroTv status={status} />
             )}
             <div className="video-label">
               <Sparkles size={14} style={{ color: 'var(--indigo)' }} />

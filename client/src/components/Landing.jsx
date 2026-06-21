@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Video, X, Camera, CameraOff } from 'lucide-react';
 
-export default function Landing({ onlineCount, interests, setInterests, onStartChat, onStartMeet }) {
+export default function Landing({ onlineCount, interests, setInterests, onStartChat }) {
   const [tagInput, setTagInput] = useState('');
-  const [joinRoomCode, setJoinRoomCode] = useState('');
   const [localStream, setLocalStream] = useState(null);
   const [cameraError, setCameraError] = useState(false);
   const [cameraRequested, setCameraRequested] = useState(() => {
@@ -133,57 +132,6 @@ export default function Landing({ onlineCount, interests, setInterests, onStartC
                 <Video size={18} />
                 Video Chat
               </button>
-            </div>
-          </div>
-
-          {/* Group Video Call Card */}
-          <div className="landing-card group-meet-card" style={{ marginTop: '1.5rem', backgroundColor: 'var(--bg-lavender)' }}>
-            <div className="input-group">
-              <label>Group Video Call (Google Meet Style)</label>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem', lineHeight: '1.4' }}>
-                Create a private room to invite friends, or enter a room code/link to join.
-              </p>
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem', flexDirection: window.innerWidth < 640 ? 'column' : 'row' }}>
-                <button 
-                  className="neon-button"
-                  onClick={() => {
-                    // Generate random room code like abc-defg-hij
-                    const r = () => Math.random().toString(36).substring(2, 6);
-                    const roomCode = `${r()}-${r()}-${r()}`;
-                    onStartMeet(roomCode);
-                  }}
-                  style={{ backgroundColor: 'var(--green)', flex: 1, padding: '0.6rem 1rem', fontSize: '0.95rem', justifyContent: 'center' }}
-                >
-                  Create Room
-                </button>
-                <div style={{ display: 'flex', flex: 1.5, border: 'var(--border-width) solid var(--border-color)', boxShadow: 'var(--shadow-sm)', background: 'var(--bg-white)', borderRadius: '4px', overflow: 'hidden' }}>
-                  <input 
-                    type="text" 
-                    placeholder="Enter room code/link"
-                    value={joinRoomCode}
-                    onChange={(e) => setJoinRoomCode(e.target.value)}
-                    style={{ flex: 1, border: 'none', padding: '0.5rem 0.75rem', outline: 'none', fontStyle: 'italic', fontSize: '0.9rem' }}
-                  />
-                  <button 
-                    onClick={() => {
-                      const trimmed = joinRoomCode.trim();
-                      if (!trimmed) return;
-                      let roomId = trimmed;
-                      if (trimmed.includes('/meet/')) {
-                        const parts = trimmed.split('/meet/');
-                        roomId = parts[parts.length - 1];
-                      }
-                      roomId = roomId.split('?')[0].split('#')[0];
-                      if (roomId) {
-                        onStartMeet(roomId);
-                      }
-                    }}
-                    style={{ background: 'var(--yellow)', borderLeft: 'var(--border-width) solid var(--border-color)', padding: '0.5rem 1rem', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}
-                  >
-                    Join
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
