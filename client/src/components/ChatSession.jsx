@@ -346,9 +346,6 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       aiFallbackTimeoutRef.current = setTimeout(() => {
         console.log("No real stranger found in queue. Fallback handling...");
         
-        // 1. Leave server queue
-        socket.emit('leave-queue');
-
         if (mode === 'video') {
           // Video mode fallback: dummy session with black screen and no AI interaction
           aiPersonaRef.current = { isDummy: true };
@@ -446,11 +443,21 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     });
 
     socket.on('matched', async ({ roomId, partnerId, initiator, commonInterests }) => {
-      // Clear AI fallback timer immediately
+      // Clear AI fallback and active timers immediately
       if (aiFallbackTimeoutRef.current) clearTimeout(aiFallbackTimeoutRef.current);
+      if (aiMatchTimeoutRef.current) clearTimeout(aiMatchTimeoutRef.current);
+      if (aiResponseTimeoutRef.current) clearTimeout(aiResponseTimeoutRef.current);
+      if (aiSkipTimeoutRef.current) clearTimeout(aiSkipTimeoutRef.current);
+      if (aiCamCheckTimeoutRef.current) clearTimeout(aiCamCheckTimeoutRef.current);
+
+      // Reset AI matched states and camera angle
+      setIsPartnerTyping(false);
+      setCurrentPersona(null);
+      aiPersonaRef.current = null;
+      chatStepRef.current = 0;
+      setAiCameraAngle('face');
 
       setStatus('matched');
-      setIsPartnerTyping(false);
       partnerIdRef.current = partnerId;
 
       const introMessages = [
