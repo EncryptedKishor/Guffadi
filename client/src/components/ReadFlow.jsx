@@ -96,7 +96,7 @@ export default function ReadFlow({ onLeave }) {
   const [sentenceIndex, setSentenceIndex] = useState(0);
   const [fadeState, setFadeState] = useState('in');
   const [autoRotate, setAutoRotate] = useState(true);
-  const [scrollSpeed, setScrollSpeed] = useState(1); // 1 = slow, 2 = medium, 0 = paused
+  const [scrollSpeed, setScrollSpeed] = useState(2); // 2 = medium, 1 = slow, 0 = paused
   
   const textScrollContainerRef = useRef(null);
   const scrollIntervalRef = useRef(null);
