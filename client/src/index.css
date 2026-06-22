@@ -1921,99 +1921,81 @@ body:has(.in-video-chat) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(-45deg, #fef9c3, #e0e7ff, #fae8ff, #f3e8ff);
-  background-size: 400% 400%;
-  animation: readflowGradient 20s ease infinite;
+  background: #ebdcb9; /* Warm parchment beige background matching growme app */
   z-index: 1000;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Lora', Georgia, serif;
   overflow: hidden;
 }
 
-@keyframes readflowGradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.readflow-particles-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.readflow-particle {
-  position: absolute;
-  bottom: -50px;
-  background-color: rgba(24, 24, 27, 0.04);
-  border: 1px solid rgba(24, 24, 27, 0.08);
-  border-radius: 50%;
-  animation: floatUp linear infinite;
-}
-
-@keyframes floatUp {
-  0% {
-    transform: translateY(0) scale(1) rotate(0deg);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.6;
-  }
-  90% {
-    opacity: 0.6;
-  }
-  100% {
-    transform: translateY(-110dvh) scale(1.2) rotate(360deg);
-    opacity: 0;
-  }
-}
-
-.readflow-music-hint {
+.readflow-top-bar {
   position: absolute;
   top: 24px;
+  left: 0;
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: var(--yellow);
-  border: 2px solid #18181b;
-  box-shadow: 3px 3px 0px #18181b;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: 800;
-  z-index: 5;
-  animation: pulseHint 2s infinite ease-in-out;
+  justify-content: space-between;
+  padding: 0 32px;
+  z-index: 20;
 }
 
-@keyframes pulseHint {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.03); }
+.readflow-back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(24, 24, 27, 0.07);
+  border: none;
+  cursor: pointer;
+  color: #18181b;
+  transition: all 0.2s;
+}
+
+.readflow-back-btn:hover {
+  background: rgba(24, 24, 27, 0.13);
+  transform: scale(1.05);
+}
+
+.readflow-header-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.readflow-main-title {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1c1917;
+  margin: 0;
+}
+
+.readflow-level-tag {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #57534e;
+  margin-top: 2px;
 }
 
 .readflow-card-display {
   position: relative;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: var(--border-width) solid var(--border-color);
-  box-shadow: var(--shadow-main);
-  border-radius: 12px;
-  padding: 4rem 3rem;
-  max-width: 650px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  max-width: 680px;
   width: 90%;
-  min-height: 250px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
-  animation: readflowFloat 6s ease-in-out infinite;
   z-index: 5;
-  margin-bottom: 2rem;
+  margin-top: 40px;
+  margin-bottom: 1rem;
 }
 
 @keyframes readflowFloat {
@@ -2022,41 +2004,26 @@ body:has(.in-video-chat) {
   100% { transform: translateY(0px) rotate(0deg); }
 }
 
-.readflow-book-title {
-  font-size: 1rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  background: var(--yellow);
-  border: 2px solid #18181b;
-  box-shadow: 2px 2px 0px #18181b;
-  padding: 4px 10px;
-  border-radius: 4px;
-  margin-bottom: 1.5rem;
-  color: #18181b;
-  align-self: flex-start;
-}
-
 .readflow-scroll-box {
   width: 100%;
-  height: 250px;
+  height: 55vh;
   overflow-y: hidden; /* Hide scrollbar but allow mechanical scrollTop updates */
-  margin-bottom: 1.5rem;
-  text-align: left;
+  margin-bottom: 2rem;
+  text-align: center;
   position: relative;
   transition: opacity 0.6s ease-in-out;
-  padding: 8px 4px;
+  padding: 8px 16px;
 }
 
-/* Add custom smooth fade mask overlay for professional scrolling indicators */
+/* Parchment fade mask overlays blending with the warm background */
 .readflow-scroll-box::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: 20px;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.7), transparent);
+  height: 50px;
+  background: linear-gradient(to bottom, #ebdcb9 10%, transparent);
   pointer-events: none;
   z-index: 2;
 }
@@ -2067,65 +2034,75 @@ body:has(.in-video-chat) {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 20px;
-  background: linear-gradient(to top, rgba(255, 255, 255, 0.7), transparent);
+  height: 50px;
+  background: linear-gradient(to top, #ebdcb9 10%, transparent);
   pointer-events: none;
   z-index: 2;
 }
 
 .readflow-scroll-content {
-  font-size: 1.25rem;
-  line-height: 1.8;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 1.8rem;
+  line-height: 1.75;
+  color: #292524; /* Soft dark slate for comfortable reading */
+  padding-top: 250px; /* offset start to scroll from bottom */
+  padding-bottom: 400px; /* buffer so paragraphs fully scroll out */
+  text-shadow: 0 1px 0px rgba(255, 255, 255, 0.5);
+}
+
+.readflow-sentence-block {
+  margin-bottom: 3.5rem;
   font-weight: 500;
-  color: #1c1917;
-  font-family: 'Onest', sans-serif;
-  padding-bottom: 200px; /* buffer so it scrolls fully past screen viewport */
 }
 
 .scroll-speed-selector {
   display: flex;
-  gap: 8px;
-  background: var(--bg-cream);
-  border: 2px solid #18181b;
-  box-shadow: 3px 3px 0px #18181b;
-  border-radius: 4px;
+  gap: 4px;
+  background: rgba(24, 24, 27, 0.05);
+  border: 1px solid rgba(24, 24, 27, 0.08);
+  border-radius: 24px;
   padding: 4px;
 }
 
 .speed-btn {
   background: transparent;
   border: none;
-  padding: 6px 12px;
-  font-size: 0.8rem;
+  padding: 8px 16px;
+  font-size: 0.85rem;
   font-weight: 800;
   cursor: pointer;
-  border-radius: 2px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   gap: 4px;
-  transition: all 0.15s;
+  color: #57534e;
+  transition: all 0.2s;
+  font-family: 'Lora', Georgia, serif;
 }
 
 .speed-btn.active {
-  background: var(--indigo);
-  color: white;
+  background: #1c1917;
+  color: #f5f5f4;
 }
 
 @media (max-width: 640px) {
   .readflow-card-display {
-    padding: 2.5rem 1.5rem;
-    min-height: 380px;
+    padding: 1.5rem 1rem;
+    height: 75vh;
   }
   .readflow-scroll-box {
-    height: 200px;
+    height: 60vh;
   }
   .readflow-scroll-content {
-    font-size: 1rem;
-    line-height: 1.6;
+    font-size: 1.45rem;
+    line-height: 1.65;
+  }
+  .readflow-sentence-block {
+    margin-bottom: 2.8rem;
   }
   .speed-btn {
-    padding: 4px 8px;
-    font-size: 0.75rem;
+    padding: 6px 12px;
+    font-size: 0.8rem;
   }
 }
 
@@ -2140,22 +2117,28 @@ body:has(.in-video-chat) {
 .readflow-controls-row {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-top: 1rem;
+  gap: 20px;
+  margin-top: 1.5rem;
+  z-index: 10;
 }
 
 .readflow-nav-btn {
-  background: var(--bg-cream);
-  border: 2px solid #18181b;
-  box-shadow: 2px 2px 0px #18181b;
-  border-radius: 4px;
-  width: 36px;
-  height: 36px;
+  background: rgba(24, 24, 27, 0.05);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  color: #1c1917;
   transition: all 0.2s;
+}
+
+.readflow-nav-btn:hover {
+  background: rgba(24, 24, 27, 0.12);
+  transform: scale(1.05);
 }
 
 .readflow-nav-btn:hover {
