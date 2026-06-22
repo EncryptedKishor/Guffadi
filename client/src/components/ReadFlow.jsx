@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Music, HelpCircle, ArrowRight, Sparkles, ArrowDown, ArrowUp } from 'lucide-react';
-
-const playlist = [
-  { name: 'Ambient Chill - Song 1', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-  { name: 'Peaceful Flow - Song 2', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
-  { name: 'Zen Mind - Song 4', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3' },
-  { name: 'Ethereal Space - Song 8', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' }
-];
+import { Home, SkipForward, SkipBack, ArrowDown, ArrowUp } from 'lucide-react';
 
 const bookParagraphs = [
   {
@@ -42,39 +35,10 @@ export default function ReadFlow({ onLeave }) {
   const [autoRotate, setAutoRotate] = useState(true);
   const [scrollSpeed, setScrollSpeed] = useState(1); // 1 = slow, 2 = medium, 0 = paused
   
-  // Audio Player State
-  const [isPlaying, setIsPlaying] = useState(true); // Default to true (auto play music when loading ReadFlow)
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [volume, setVolume] = useState(0.4);
-  const [isMuted, setIsMuted] = useState(false);
-  const [showMusicHint, setShowMusicHint] = useState(false); // Music starts auto, no hint needed
-  
-  const audioRef = useRef(null);
   const textScrollContainerRef = useRef(null);
   const scrollIntervalRef = useRef(null);
 
-  // 1. Trigger Auto Play on Component Mount and Interaction
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.play().catch(err => {
-        console.warn("Autoplay blocked. Awaiting user gesture for audio context release.", err);
-        // Fallback: If blocked, listen to first touch/click inside page to kick off music
-        const forcePlay = () => {
-          if (audioRef.current) {
-            audioRef.current.play().then(() => {
-              setIsPlaying(true);
-              document.removeEventListener('click', forcePlay);
-              document.removeEventListener('touchstart', forcePlay);
-            }).catch(e => console.error(e));
-          }
-        };
-        document.addEventListener('click', forcePlay);
-        document.addEventListener('touchstart', forcePlay);
-      });
-    }
-  }, []);
-
-  // 2. Manage Automated Smooth Paragraph Auto-Scrolling
+  // Manage Automated Smooth Paragraph Auto-Scrolling
   useEffect(() => {
     if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
     if (scrollSpeed === 0) return;
@@ -114,40 +78,6 @@ export default function ReadFlow({ onLeave }) {
     };
   }, [sentenceIndex, scrollSpeed, autoRotate]);
 
-  // 3. Audio Control Effects
-  useEffect(() => {
-    if (!audioRef.current) return;
-    
-    if (isPlaying) {
-      audioRef.current.play().catch(err => {
-        console.warn("Audio autoplay blocked by browser policy until interaction.", err);
-        setIsPlaying(false);
-      });
-    } else {
-      audioRef.current.pause();
-    }
-  }, [isPlaying, currentTrackIndex]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume;
-    }
-  }, [volume, isMuted]);
-
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleNextTrack = () => {
-    setCurrentTrackIndex(prev => (prev + 1) % playlist.length);
-    setIsPlaying(true);
-  };
-
-  const handlePrevTrack = () => {
-    setCurrentTrackIndex(prev => (prev - 1 + playlist.length) % playlist.length);
-    setIsPlaying(true);
-  };
-
   const handleNextSentence = () => {
     setFadeState('out');
     setTimeout(() => {
@@ -182,14 +112,6 @@ export default function ReadFlow({ onLeave }) {
           />
         ))}
       </div>
-
-      {/* Floating Audio Playback Hint */}
-      {showMusicHint && !isPlaying && (
-        <div className="readflow-music-hint">
-          <Sparkles size={16} />
-          <span>Click play below to listen to ambient music</span>
-        </div>
-      )}
 
       {/* Floating Main Content Card */}
       <div className="readflow-card-display">
@@ -251,55 +173,6 @@ export default function ReadFlow({ onLeave }) {
             <SkipForward size={18} />
           </button>
         </div>
-      </div>
-
-      {/* Cool Interactive Neobrutalist Audio Controller */}
-      <div className="readflow-player-card">
-        <div className="track-info">
-          <Music size={16} className="music-icon" style={{ animation: isPlaying ? 'spin 6s linear infinite' : 'none' }} />
-          <span className="track-name">{playlist[currentTrackIndex].name}</span>
-        </div>
-        
-        <div className="player-controls">
-          <button type="button" onClick={handlePrevTrack} className="player-btn">
-            <SkipBack size={16} />
-          </button>
-          
-          <button type="button" onClick={handlePlayPause} className="player-play-btn">
-            {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-          </button>
-          
-          <button type="button" onClick={handleNextTrack} className="player-btn">
-            <SkipForward size={16} />
-          </button>
-
-          <div className="separator"></div>
-
-          <button type="button" onClick={() => setIsMuted(!isMuted)} className="player-btn">
-            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-          </button>
-
-          <input 
-            type="range" 
-            min="0" 
-            max="1" 
-            step="0.05"
-            value={volume}
-            onChange={(e) => {
-              setVolume(parseFloat(e.target.value));
-              setIsMuted(false);
-            }}
-            className="player-volume-slider"
-            aria-label="Volume slider"
-          />
-        </div>
-
-        <audio 
-          ref={audioRef}
-          src={playlist[currentTrackIndex].url}
-          loop
-          onEnded={handleNextTrack}
-        />
       </div>
 
       {/* Back to Landing Home button */}
