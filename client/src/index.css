@@ -1988,14 +1988,15 @@ body:has(.in-video-chat) {
   box-shadow: none;
   max-width: 680px;
   width: 90%;
+  height: calc(100dvh - 160px); /* Fit to screen height, leaving room for top title and bottom controls */
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   text-align: center;
   z-index: 5;
-  margin-top: 40px;
-  margin-bottom: 1rem;
+  margin-top: 80px; /* clear header */
+  margin-bottom: 20px;
 }
 
 @keyframes readflowFloat {
@@ -2006,9 +2007,10 @@ body:has(.in-video-chat) {
 
 .readflow-scroll-box {
   width: 100%;
-  height: 55vh;
+  flex: 1; /* Stretch to fill available screen height in display card */
+  min-height: 0;
   overflow-y: hidden; /* Hide scrollbar but allow mechanical scrollTop updates */
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   text-align: center;
   position: relative;
   transition: opacity 0.6s ease-in-out;
@@ -2087,11 +2089,15 @@ body:has(.in-video-chat) {
 
 @media (max-width: 640px) {
   .readflow-card-display {
-    padding: 1.5rem 1rem;
-    height: 75vh;
+    padding: 0;
+    height: calc(100dvh - 120px);
+    margin-top: 70px;
+    margin-bottom: 10px;
   }
   .readflow-scroll-box {
-    height: 60vh;
+    width: 100%;
+    flex: 1;
+    height: auto;
   }
   .readflow-scroll-content {
     font-size: 1.45rem;
