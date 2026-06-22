@@ -196,71 +196,68 @@ export default function ReadFlow({ onLeave }) {
         ))}
       </div>
 
-      {/* Floating Main Content Card (completely borderless and transparent) */}
-      <div className="readflow-card-display">
-        {/* Scrollable Text Viewport */}
-        <div 
-          ref={textScrollContainerRef} 
-          className={`readflow-scroll-box ${fadeState === 'in' ? 'fade-in' : 'fade-out'}`}
-        >
-          <div className="readflow-scroll-content">
-            {/* Show book title inside reading scroll list as starting cue */}
-            <div style={{ fontSize: '1rem', fontStyle: 'italic', color: '#78716c', marginBottom: '3.5rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-              — From {bookParagraphs[sentenceIndex].book} —
+      {/* Scrollable Text Viewport */}
+      <div 
+        ref={textScrollContainerRef} 
+        className={`readflow-scroll-box ${fadeState === 'in' ? 'fade-in' : 'fade-out'}`}
+      >
+        <div className="readflow-scroll-content">
+          {/* Show book title inside reading scroll list as starting cue */}
+          <div style={{ fontSize: '1rem', fontStyle: 'italic', color: '#78716c', marginBottom: '3.5rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            — From {bookParagraphs[sentenceIndex].book} —
+          </div>
+
+          {bookParagraphs[sentenceIndex].sentences.map((sentence, idx) => (
+            <div key={idx} className="readflow-sentence-block">
+              {sentence}
             </div>
-
-            {bookParagraphs[sentenceIndex].sentences.map((sentence, idx) => (
-              <div key={idx} className="readflow-sentence-block">
-                {sentence}
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
+      </div>
+      
+      {/* Navigation Buttons and Scroll Speed pill selector */}
+      <div className="readflow-controls-row">
+        <button 
+          type="button" 
+          onClick={handlePrevSentence} 
+          className="readflow-nav-btn"
+          title="Previous chapter/passage"
+        >
+          <SkipBack size={18} />
+        </button>
         
-        {/* Navigation Buttons and Scroll Speed pill selector */}
-        <div className="readflow-controls-row">
+        <div className="scroll-speed-selector">
           <button 
             type="button" 
-            onClick={handlePrevSentence} 
-            className="readflow-nav-btn"
-            title="Previous chapter/passage"
+            onClick={() => setScrollSpeed(0)} 
+            className={`speed-btn ${scrollSpeed === 0 ? 'active' : ''}`}
           >
-            <SkipBack size={18} />
+            Pause
           </button>
-          
-          <div className="scroll-speed-selector">
-            <button 
-              type="button" 
-              onClick={() => setScrollSpeed(0)} 
-              className={`speed-btn ${scrollSpeed === 0 ? 'active' : ''}`}
-            >
-              Pause
-            </button>
-            <button 
-              type="button" 
-              onClick={() => setScrollSpeed(1)} 
-              className={`speed-btn ${scrollSpeed === 1 ? 'active' : ''}`}
-            >
-              <ArrowDown size={14} /> Slow
-            </button>
-            <button 
-              type="button" 
-              onClick={() => setScrollSpeed(2)} 
-              className={`speed-btn ${scrollSpeed === 2 ? 'active' : ''}`}
-            >
-              <ArrowDown size={14} /> Medium
-            </button>
-          </div>
-
           <button 
             type="button" 
-            onClick={handleNextSentence} 
-            className="readflow-nav-btn"
-            title="Next chapter/passage"
+            onClick={() => setScrollSpeed(1)} 
+            className={`speed-btn ${scrollSpeed === 1 ? 'active' : ''}`}
           >
-            <SkipForward size={18} />
+            <ArrowDown size={14} /> Slow
+          </button>
+          <button 
+            type="button" 
+            onClick={() => setScrollSpeed(2)} 
+            className={`speed-btn ${scrollSpeed === 2 ? 'active' : ''}`}
+          >
+            <ArrowDown size={14} /> Medium
           </button>
         </div>
+
+        <button 
+          type="button" 
+          onClick={handleNextSentence} 
+          className="readflow-nav-btn"
+          title="Next chapter/passage"
+        >
+          <SkipForward size={18} />
+        </button>
       </div>
     </div>
   );

@@ -1920,23 +1920,24 @@ body:has(.in-video-chat) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between; /* distributes header, scrolling text and controls row vertically */
+  padding: 32px 24px; /* margins to avoid device notches */
   background: #ebdcb9; /* Warm parchment beige background matching growme app */
   z-index: 1000;
   font-family: 'Lora', Georgia, serif;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .readflow-top-bar {
-  position: absolute;
-  top: 24px;
-  left: 0;
+  position: relative;
   width: 100%;
+  max-width: 680px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
   z-index: 20;
+  flex-shrink: 0; /* guarantee topbar doesn't shrink on small screen laptop windows */
 }
 
 .readflow-back-btn {
@@ -2007,14 +2008,22 @@ body:has(.in-video-chat) {
 
 .readflow-scroll-box {
   width: 100%;
-  flex: 1; /* Stretch to fill available screen height in display card */
-  min-height: 0;
-  overflow-y: hidden; /* Hide scrollbar but allow mechanical scrollTop updates */
-  margin-bottom: 1.5rem;
+  max-width: 680px;
+  flex: 1; /* Stretch to fill available screen height dynamically */
+  min-height: 0; /* dynamic vertical layout flexibility */
+  overflow-y: auto; /* enable native drag/swipe scrolling on phones */
+  scrollbar-width: none; /* Hide scrollbars in Firefox */
+  -ms-overflow-style: none; /* Hide scrollbars in IE/Edge */
+  margin: 1.5rem 0;
   text-align: center;
   position: relative;
   transition: opacity 0.6s ease-in-out;
   padding: 8px 16px;
+  box-sizing: border-box;
+}
+
+.readflow-scroll-box::-webkit-scrollbar {
+  display: none; /* Hide scrollbar track in Chrome/Safari/Opera */
 }
 
 /* Parchment fade mask overlays blending with the warm background */
@@ -2088,16 +2097,17 @@ body:has(.in-video-chat) {
 }
 
 @media (max-width: 640px) {
-  .readflow-card-display {
-    padding: 0;
-    height: calc(100dvh - 120px);
-    margin-top: 70px;
-    margin-bottom: 10px;
+  .readflow-container {
+    padding: 20px 16px; /* tighter padding on mobile */
+  }
+  .readflow-main-title {
+    font-size: 1.4rem;
+  }
+  .readflow-level-tag {
+    font-size: 0.95rem;
   }
   .readflow-scroll-box {
-    width: 100%;
-    flex: 1;
-    height: auto;
+    margin: 1rem 0;
   }
   .readflow-scroll-content {
     font-size: 1.45rem;
