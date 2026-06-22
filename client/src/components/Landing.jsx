@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Video, X, Camera, CameraOff } from 'lucide-react';
+import { MessageSquare, Video, X, Camera, CameraOff, BookOpen } from 'lucide-react';
 
-export default function Landing({ onlineCount, interests, setInterests, onStartChat, onStartMeet }) {
+export default function Landing({ onlineCount, interests, setInterests, onStartChat, onStartMeet, onStartReadFlow }) {
   const [tagInput, setTagInput] = useState('');
   const [joinRoomCode, setJoinRoomCode] = useState('');
   const [localStream, setLocalStream] = useState(null);
@@ -184,6 +184,26 @@ export default function Landing({ onlineCount, interests, setInterests, onStartC
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* ReadFlow Card */}
+          <div className="landing-card readflow-entry-card" style={{ marginTop: '1.5rem', backgroundColor: 'var(--bg-cream)' }}>
+            <div className="input-group">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800 }}>
+                <BookOpen size={20} style={{ color: 'var(--text-dark)' }} />
+                ReadFlow Platform
+              </label>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem', lineHeight: '1.4' }}>
+                Relax your mind. Read simple, floating sentences with motivational/ambient background music.
+              </p>
+              <button 
+                className="neon-button"
+                onClick={onStartReadFlow}
+                style={{ backgroundColor: 'var(--yellow)', width: '100%', padding: '0.6rem 1rem', fontSize: '0.95rem', justifyContent: 'center', marginTop: '0.25rem' }}
+              >
+                Open ReadFlow
+              </button>
             </div>
           </div>
         </div>

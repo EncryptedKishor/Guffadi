@@ -4,6 +4,7 @@ import { MessageCircle } from 'lucide-react';
 import Landing from './components/Landing';
 import ChatSession from './components/ChatSession';
 import GroupMeet from './components/GroupMeet';
+import ReadFlow from './components/ReadFlow';
 
 export default function App() {
   const [view, setView] = useState('landing'); // 'landing' | 'chat' | 'meet'
@@ -65,6 +66,8 @@ export default function App() {
       if (match) {
         setMeetRoomId(match[1]);
         setView('meet');
+      } else if (path === '/readflow') {
+        setView('readflow');
       } else {
         setView('landing');
       }
@@ -106,11 +109,21 @@ export default function App() {
     setView('landing');
   };
 
+  const handleStartReadFlow = () => {
+    window.history.pushState({}, '', '/readflow');
+    setView('readflow');
+  };
+
+  const handleLeaveReadFlow = () => {
+    window.history.pushState({}, '', '/');
+    setView('landing');
+  };
+
   return (
-    <div className={`app-container ${view === 'chat' ? 'in-chat' : ''} ${view === 'chat' && mode === 'video' ? 'in-video-chat' : ''} ${view === 'meet' ? 'in-meet' : ''}`}>
+    <div className={`app-container ${view === 'chat' ? 'in-chat' : ''} ${view === 'chat' && mode === 'video' ? 'in-video-chat' : ''} ${view === 'meet' ? 'in-meet' : ''} ${view === 'readflow' ? 'in-readflow' : ''}`}>
       {/* Premium Header */}
       <header className="app-header">
-        <div className="logo" onClick={view === 'meet' ? handleLeaveMeet : handleLeaveChat} style={{ cursor: 'pointer' }}>
+        <div className="logo" onClick={view === 'meet' ? handleLeaveMeet : (view === 'readflow' ? handleLeaveReadFlow : handleLeaveChat)} style={{ cursor: 'pointer' }}>
           <MessageCircle size={28} style={{ color: 'var(--text-dark)' }} />
           Guffadi
         </div>
@@ -132,6 +145,7 @@ export default function App() {
           setInterests={setInterests}
           onStartChat={handleStartChat}
           onStartMeet={handleStartMeet}
+          onStartReadFlow={handleStartReadFlow}
         />
       ) : view === 'chat' ? (
         <ChatSession
@@ -140,11 +154,15 @@ export default function App() {
           interests={interests}
           onLeave={handleLeaveChat}
         />
-      ) : (
+      ) : view === 'meet' ? (
         <GroupMeet
           socket={socket}
           roomId={meetRoomId}
           onLeave={handleLeaveMeet}
+        />
+      ) : (
+        <ReadFlow
+          onLeave={handleLeaveReadFlow}
         />
       )}
     </div>
