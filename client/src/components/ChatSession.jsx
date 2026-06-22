@@ -161,7 +161,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     if (aiResponseTimeoutRef.current) clearTimeout(aiResponseTimeoutRef.current);
 
     const persona = aiPersonaRef.current;
-    if (!persona) return;
+    if (!persona || persona.isDummy) return;
 
     chatStepRef.current += 1;
     const currentStep = chatStepRef.current;
@@ -269,7 +269,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
     if (aiCamCheckTimeoutRef.current) clearTimeout(aiCamCheckTimeoutRef.current);
     if (aiSkipTimeoutRef.current) clearTimeout(aiSkipTimeoutRef.current);
 
-    if (mode === 'video' && videoDisabled && aiPersonaRef.current) {
+    if (mode === 'video' && videoDisabled && aiPersonaRef.current && !aiPersonaRef.current.isDummy) {
       // Ask for camera after 2.5 seconds
       aiCamCheckTimeoutRef.current = setTimeout(() => {
         setIsPartnerTyping(true);
@@ -300,7 +300,7 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
 
   // Effect to manage camera checks & idle timer based on camera state when matched with AI
   useEffect(() => {
-    if (status === 'matched' && aiPersonaRef.current) {
+    if (status === 'matched' && aiPersonaRef.current && !aiPersonaRef.current.isDummy) {
       if (!videoDisabled) {
         // If camera is enabled, clear any warning/skip timers
         if (aiCamCheckTimeoutRef.current) clearTimeout(aiCamCheckTimeoutRef.current);
@@ -344,12 +344,23 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
       // Start randomized fallback timer between 4 and 7 seconds
       const fallbackDelay = 4000 + Math.random() * 3000;
       aiFallbackTimeoutRef.current = setTimeout(() => {
-        console.log("No real stranger found in queue. Fallback to AI stranger...");
+        console.log("No real stranger found in queue. Fallback handling...");
         
         // 1. Leave server queue
         socket.emit('leave-queue');
 
-        // 2. Pick AI Persona
+        if (mode === 'video') {
+          // Video mode fallback: dummy session with black screen and no AI interaction
+          aiPersonaRef.current = { isDummy: true };
+          setCurrentPersona(null);
+          setStatus('matched');
+          setMessages([
+            { key: 'match-1', sender: 'system', text: 'You are now chatting with a random stranger!' }
+          ]);
+          return;
+        }
+
+        // 2. Pick AI Persona (For text mode)
         let selectedPersona = null;
         if (interests.length > 0) {
           const matching = aiPersonas.filter(p => 
@@ -690,8 +701,10 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
         { key: `msg-you-${Date.now()}`, sender: 'you', text, timestamp: Date.now() }
       ]);
       setInputText('');
-      triggerAiResponse(text);
-      startAiIdleTimer(); // Reset the 25-second idle skip timer
+      if (!aiPersonaRef.current.isDummy) {
+        triggerAiResponse(text);
+        startAiIdleTimer(); // Reset the 25-second idle skip timer
+      }
       return;
     }
 
