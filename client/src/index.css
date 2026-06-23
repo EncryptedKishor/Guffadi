@@ -2056,8 +2056,8 @@ body:has(.in-video-chat) {
   font-size: 1.8rem;
   line-height: 1.75;
   color: #292524; /* Soft dark slate for comfortable reading */
-  padding-top: 250px; /* offset start to scroll from bottom */
-  padding-bottom: 400px; /* buffer so paragraphs fully scroll out */
+  padding-top: 50dvh; /* offset start to scroll from bottom */
+  padding-bottom: 90dvh; /* buffer so paragraphs fully scroll up to the top */
   text-shadow: 0 1px 0px rgba(255, 255, 255, 0.5);
 }
 
