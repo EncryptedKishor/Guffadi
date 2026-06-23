@@ -274,6 +274,10 @@ export default function GroupMeet({ socket, roomId, onLeave }) {
 
   const startScreenShare = async () => {
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        alert("Screen sharing is not supported on mobile web browsers due to iOS/Android operating system security policies. Please use a desktop web browser (such as Chrome, Safari, Firefox, or Edge) to share your screen.");
+        return;
+      }
       const screen = await navigator.mediaDevices.getDisplayMedia({ video: true });
       setScreenStream(screen);
       setIsScreenSharing(true);
@@ -300,6 +304,10 @@ export default function GroupMeet({ socket, roomId, onLeave }) {
       };
     } catch (err) {
       console.error('Error sharing screen:', err);
+      // Only alert if the user didn't cancel the capture prompt manually
+      if (err.name !== 'NotAllowedError') {
+        alert("Could not share screen: " + err.message);
+      }
     }
   };
 
