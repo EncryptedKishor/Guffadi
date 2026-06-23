@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Mic, MicOff, Video, VideoOff, Home, AlertCircle, Sparkles, MessageSquare, X, MessageCircle } from 'lucide-react';
 import RetroTv from './RetroTv';
-import fallbackVideos from './fallback_videos.json';
 
 const aiPersonas = [
   {
@@ -348,11 +347,9 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
         console.log("No real stranger found in queue. Fallback handling...");
         
         if (mode === 'video') {
-          // Video mode fallback: play a random fallback video from the 100+ collection, then skip when it ends
-          const randomIdx = Math.floor(Math.random() * fallbackVideos.length);
-          const chosenVideo = fallbackVideos[randomIdx];
+          // Video mode fallback: play fallback video, then skip when it ends
           aiPersonaRef.current = { isDummy: true, isFallback: true };
-          setCurrentPersona({ videoUrl: chosenVideo, isFallback: true });
+          setCurrentPersona({ videoUrl: '/videos/fallback_stranger.mp4', isFallback: true });
           setStatus('matched');
           setMessages([
             { key: 'match-1', sender: 'system', text: 'You are now chatting with a random stranger!' }
