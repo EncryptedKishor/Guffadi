@@ -1921,7 +1921,7 @@ body:has(.in-video-chat) {
   flex-direction: column;
   align-items: center;
   justify-content: space-between; /* distributes header, scrolling text and controls row vertically */
-  padding: 32px 24px; /* margins to avoid device notches */
+  padding: 16px 24px 32px 24px; /* tight top padding to move title up */
   background: #ebdcb9; /* Warm parchment beige background matching growme app */
   z-index: 1000;
   font-family: 'Lora', Georgia, serif;
@@ -2014,7 +2014,7 @@ body:has(.in-video-chat) {
   overflow-y: auto; /* enable native drag/swipe scrolling on phones */
   scrollbar-width: none; /* Hide scrollbars in Firefox */
   -ms-overflow-style: none; /* Hide scrollbars in IE/Edge */
-  margin: 1.5rem 0;
+  margin: 0; /* remove margin to minimize top gap to header */
   text-align: center;
   position: relative;
   transition: opacity 0.6s ease-in-out;
@@ -2033,7 +2033,7 @@ body:has(.in-video-chat) {
   top: 0;
   left: 0;
   width: 100%;
-  height: 50px;
+  height: 15px; /* very small fade mask so text can scroll closer to top bar title */
   background: linear-gradient(to bottom, #ebdcb9 10%, transparent);
   pointer-events: none;
   z-index: 2;
@@ -2056,8 +2056,8 @@ body:has(.in-video-chat) {
   font-size: 1.8rem;
   line-height: 1.75;
   color: #292524; /* Soft dark slate for comfortable reading */
-  padding-top: 50dvh; /* offset start to scroll from bottom */
-  padding-bottom: 90dvh; /* buffer so paragraphs fully scroll up to the top */
+  padding-top: 30dvh; /* start scrolling from 30% viewport height */
+  padding-bottom: 95dvh; /* let paragraphs scroll completely out past top edge */
   text-shadow: 0 1px 0px rgba(255, 255, 255, 0.5);
 }
 
