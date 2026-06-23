@@ -15,6 +15,74 @@ export default function App() {
   const [onlineCount, setOnlineCount] = useState(() => Math.floor(Math.random() * 80) + 540);
   const [connected, setConnected] = useState(false);
 
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+
+  // PWA Install Prompt Handler
+  useEffect(() => {
+    // 1. Check if already running in standalone mode (installed)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (isStandalone) {
+      console.log('App is running in standalone mode.');
+      return;
+    }
+
+    // 2. Check if user dismissed the banner previously
+    const isDismissed = localStorage.getItem('guffadi_install_dismissed') === 'true';
+    if (isDismissed) {
+      return;
+    }
+
+    // 3. Detect mobile device
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+    if (!isMobile) {
+      return;
+    }
+
+    // 4. Handle beforeinstallprompt (Android / Chrome)
+    const handleInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    };
+
+    // 5. iOS detection (no beforeinstallprompt event, show banner directly)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) {
+      setShowInstallBanner(true);
+    }
+
+    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+    if (isIOS) {
+      setShowIOSInstructions(true);
+      return;
+    }
+
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to PWA prompt: ${outcome}`);
+    
+    setDeferredPrompt(null);
+    setShowInstallBanner(false);
+  };
+
+  const handleDismissInstall = () => {
+    localStorage.setItem('guffadi_install_dismissed', 'true');
+    setShowInstallBanner(false);
+  };
+
   // Initialize socket connection on load
   useEffect(() => {
     // Vite proxies /socket.io automatically, so connecting to empty arg (current host) works
@@ -120,51 +188,74 @@ export default function App() {
   };
 
   return (
-    <div className={`app-container ${view === 'chat' ? 'in-chat' : ''} ${view === 'chat' && mode === 'video' ? 'in-video-chat' : ''} ${view === 'meet' ? 'in-meet' : ''} ${view === 'readflow' ? 'in-readflow' : ''}`}>
-      {/* Premium Header */}
-      <header className="app-header">
-        <div className="logo" onClick={view === 'meet' ? handleLeaveMeet : (view === 'readflow' ? handleLeaveReadFlow : handleLeaveChat)} style={{ cursor: 'pointer' }}>
-          <MessageCircle size={28} style={{ color: 'var(--text-dark)' }} />
-          Guffadi
+    <>
+      {view === 'landing' && showInstallBanner && (
+        <div className="install-banner">
+          <div className="install-banner-content">
+            <span className="install-text">⚡ Add Guffadi to your Home Screen for a faster, full-screen experience!</span>
+            <div className="install-banner-actions">
+              <button onClick={handleInstallClick} className="install-btn-action">Install App</button>
+              <button onClick={handleDismissInstall} className="install-close-btn" aria-label="Close">✕</button>
+            </div>
+          </div>
+          {showIOSInstructions && (
+            <div className="ios-instructions-modal">
+              <div className="ios-instructions-content">
+                <h3>Install Guffadi on iOS</h3>
+                <p>1. Tap the <strong>Share</strong> button (box with an up arrow) at the bottom of Safari.</p>
+                <p>2. Scroll down and select <strong>Add to Home Screen</strong>.</p>
+                <button onClick={() => setShowIOSInstructions(false)} className="glass-button" style={{ backgroundColor: 'var(--yellow)', marginTop: '10px', width: '100%' }}>Got it</button>
+              </div>
+            </div>
+          )}
         </div>
-        <div className="online-badge">
-          <div className="pulse-dot" style={{ backgroundColor: connected ? 'var(--green)' : 'var(--rose)' }}></div>
-          <span>
-            {connected 
-              ? `${onlineCount} Stranger${onlineCount === 1 ? '' : 's'} Online` 
-              : 'Reconnecting to Server...'}
-          </span>
-        </div>
-      </header>
-
-      {/* Main View Manager */}
-      {view === 'landing' ? (
-        <Landing
-          onlineCount={onlineCount}
-          interests={interests}
-          setInterests={setInterests}
-          onStartChat={handleStartChat}
-          onStartMeet={handleStartMeet}
-          onStartReadFlow={handleStartReadFlow}
-        />
-      ) : view === 'chat' ? (
-        <ChatSession
-          socket={socket}
-          mode={mode}
-          interests={interests}
-          onLeave={handleLeaveChat}
-        />
-      ) : view === 'meet' ? (
-        <GroupMeet
-          socket={socket}
-          roomId={meetRoomId}
-          onLeave={handleLeaveMeet}
-        />
-      ) : (
-        <ReadFlow
-          onLeave={handleLeaveReadFlow}
-        />
       )}
-    </div>
+      <div className={`app-container ${view === 'chat' ? 'in-chat' : ''} ${view === 'chat' && mode === 'video' ? 'in-video-chat' : ''} ${view === 'meet' ? 'in-meet' : ''} ${view === 'readflow' ? 'in-readflow' : ''}`}>
+        {/* Premium Header */}
+        <header className="app-header">
+          <div className="logo" onClick={view === 'meet' ? handleLeaveMeet : (view === 'readflow' ? handleLeaveReadFlow : handleLeaveChat)} style={{ cursor: 'pointer' }}>
+            <MessageCircle size={28} style={{ color: 'var(--text-dark)' }} />
+            Guffadi
+          </div>
+          <div className="online-badge">
+            <div className="pulse-dot" style={{ backgroundColor: connected ? 'var(--green)' : 'var(--rose)' }}></div>
+            <span>
+              {connected 
+                ? `${onlineCount} Stranger${onlineCount === 1 ? '' : 's'} Online` 
+                : 'Reconnecting to Server...'}
+            </span>
+          </div>
+        </header>
+
+        {/* Main View Manager */}
+        {view === 'landing' ? (
+          <Landing
+            onlineCount={onlineCount}
+            interests={interests}
+            setInterests={setInterests}
+            onStartChat={handleStartChat}
+            onStartMeet={handleStartMeet}
+            onStartReadFlow={handleStartReadFlow}
+          />
+        ) : view === 'chat' ? (
+          <ChatSession
+            socket={socket}
+            mode={mode}
+            interests={interests}
+            onLeave={handleLeaveChat}
+          />
+        ) : view === 'meet' ? (
+          <GroupMeet
+            socket={socket}
+            roomId={meetRoomId}
+            onLeave={handleLeaveMeet}
+          />
+        ) : (
+          <ReadFlow
+            onLeave={handleLeaveReadFlow}
+          />
+        )}
+      </div>
+    </>
   );
 }
