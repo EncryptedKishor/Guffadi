@@ -61,63 +61,16 @@ export default function RetroTv({ status }) {
   }, []);
 
   return (
-    <div className="retro-tv-wrapper">
-      <div className="retro-tv-container">
-        {/* Antenna */}
-        <div className="tv-antenna">
-          <div className="antenna-rod left"></div>
-          <div className="antenna-rod right"></div>
-          <div className="antenna-base"></div>
-        </div>
-
-        {/* Cabinet */}
-        <div className="tv-cabinet">
-          {/* Bezel */}
-          <div className="tv-bezel">
-            {/* Screen Glass */}
-            <div className="tv-screen">
-              <canvas ref={canvasRef} className="tv-static-canvas" />
-              <div className="tv-scanlines"></div>
-              <div className="tv-screen-shadow"></div>
-              
-              {/* On-screen status display */}
-              <div className="tv-status-overlay">
-                <div className="tv-channel">CH 01</div>
-                <div className="tv-searching">
-                  {status === 'waiting' ? 'SEARCHING...' : 'CONNECTING...'}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Control Panel */}
-          <div className="tv-controls">
-            <div className="tv-brand">GUFFADI</div>
-            
-            <div className="tv-knob-group">
-              <div className="tv-knob-container">
-                <div className="tv-knob-label">VOL</div>
-                <div className="tv-knob"></div>
-              </div>
-              <div className="tv-knob-container">
-                <div className="tv-knob-label">CH</div>
-                <div className="tv-knob rotated"></div>
-              </div>
-            </div>
-
-            <div className="tv-grill">
-              <div className="grill-slot"></div>
-              <div className="grill-slot"></div>
-              <div className="grill-slot"></div>
-              <div className="grill-slot"></div>
-              <div className="grill-slot"></div>
-            </div>
-
-            <div className="tv-power">
-              <div className="power-led"></div>
-              <div className="power-label">POWER</div>
-            </div>
-          </div>
+    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', backgroundColor: '#000' }}>
+      <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
+      <div className="tv-scanlines"></div>
+      <div className="tv-screen-shadow"></div>
+      
+      {/* On-screen status display */}
+      <div className="tv-status-overlay">
+        <div className="tv-channel">CH 01</div>
+        <div className="tv-searching">
+          {status === 'waiting' ? 'SEARCHING...' : 'CONNECTING...'}
         </div>
       </div>
     </div>

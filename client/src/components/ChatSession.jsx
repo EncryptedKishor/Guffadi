@@ -347,9 +347,9 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
         console.log("No real stranger found in queue. Fallback handling...");
         
         if (mode === 'video') {
-          // Video mode fallback: play fallback video, then skip when it ends
-          aiPersonaRef.current = { isDummy: true, isFallback: true };
-          setCurrentPersona({ videoUrl: '/videos/fallback_stranger.mp4', isFallback: true });
+          // Video mode fallback: dummy session with black screen and no AI interaction
+          aiPersonaRef.current = { isDummy: true };
+          setCurrentPersona(null);
           setStatus('matched');
           setMessages([
             { key: 'match-1', sender: 'system', text: 'You are now chatting with a random stranger!' }
@@ -807,9 +807,8 @@ export default function ChatSession({ socket, mode, interests, onLeave }) {
                   src={currentPersona.videoUrl}
                   autoPlay 
                   playsInline 
-                  loop={!currentPersona.isFallback}
+                  loop
                   muted
-                  onEnded={currentPersona.isFallback ? handleStopAction : undefined}
                 />
               ) : (
                 <video 
